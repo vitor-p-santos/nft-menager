@@ -8,6 +8,7 @@ import twitter from '@/assets/icons/social-twitter.svg'
 import youtube from '@/assets/icons/social-youtube.svg'
 import { Skeleton } from '@/components/feedback/skeleton'
 import { Container } from '@/components/layout/container'
+import { Badge } from '@/components/ui/badge'
 import { CATALOG_SECTION_ID } from '@/entities/catalog'
 import { siteQueryOptions } from '@/features/home/api/queries'
 import type { SiteSettings } from '@/features/home/schemas/content'
@@ -222,9 +223,9 @@ export function SiteFooter() {
             </div>
             <div className="flex flex-col gap-3">
               <h2 className="text-lead leading-4 font-bold whitespace-nowrap text-foreground">Carteiras compatíveis</h2>
-              <p className="flex h-[26px] items-center justify-center rounded-md border border-border-soft bg-surface-dark pl-2 text-tiny leading-normal font-bold tracking-[0.1px] whitespace-pre text-text-accent">
-                {'METAMASK  •  WALLETCONNECT  •  COINBASE'}
-              </p>
+              <Badge asChild variant="seal" className="justify-center pr-0">
+                <p>{'METAMASK  •  WALLETCONNECT  •  COINBASE'}</p>
+              </Badge>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { Skeleton } from '@/components/feedback/skeleton'
+import { Badge } from '@/components/ui/badge'
 import type { NftSummary } from './schema'
 import { formatEthLabel } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -31,9 +32,9 @@ export function NftCard({ nft, priority = false, action }: { nft: NftSummary; pr
             className="aspect-square w-full rounded-xl object-cover transition-transform duration-300 motion-safe:group-focus-within:scale-[1.03] motion-safe:group-hover:scale-[1.03]"
           />
           {nft.rarity === 'rare' && (
-            <span className="absolute top-0 -left-1 flex h-8 w-[68px] items-center bg-primary px-2 text-caption leading-[14px] font-bold text-primary-foreground">
+            <Badge variant="rare" className="absolute top-0 -left-1">
               RARO
-            </span>
+            </Badge>
           )}
           {/* Ação de hover/foco (desktop): atalho visual para o detalhe; o link real é o nome */}
           <span

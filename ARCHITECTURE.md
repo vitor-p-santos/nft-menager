@@ -37,6 +37,10 @@ Revisão final dos requisitos contra o código, com o que ficou faltando: [`repo
 
 Os ciclos de import são barrados pelo lint (`import/no-cycle`).
 
+## Componentes base (T-021)
+
+`src/components/ui` tem `Input`, `Select`, `Checkbox`, `RadioGroup`/`RadioGroupItem`/`RadioIndicator` e `Badge` com as classes que as telas já usavam (medidas do Figma), sem mudança visual (comparado pixel a pixel em 390/768/1440). Todos ficam sobre **controles nativos**, e não sobre os primitivos do Radix: `Select` segue o padrão "native select" do shadcn (`selectOption` e o teclado do sistema continuam valendo) e checkbox/radio são `<input>` ocultos (`peer sr-only`) com o indicador desenhado ao lado. Assim, `getByLabel`, `getByRole('radio'|'checkbox')` e `.check()` seguem funcionando, e cada tela continua desenhando a opção do jeito que o Figma pede (cartão de carteira, pílula de edição). `form-field.tsx` compõe `Input`/`Select`; o `Badge` cobre o "RARO" do card, o selo de carteiras (checkout e footer) e o estado do pedido. O lint reconhece esses componentes como controles de `<label>` (`jsx-a11y/label-has-associated-control` → `controlComponents`).
+
 ## Fluxo de dados
 - **Leitura:** a rota chama `ensureQueryData(xQueries.detail(id))` no loader, e o componente usa `useSuspenseQuery`/`useQuery` com as mesmas `queryOptions`.
 - **Escrita:** `useMutation` → `onSuccess` faz `setQueryData` com a resposta do servidor e invalida as keys relacionadas.

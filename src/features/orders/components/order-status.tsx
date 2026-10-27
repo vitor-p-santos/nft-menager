@@ -1,12 +1,12 @@
 import { CircleAlertIcon, CircleCheckIcon, ClockIcon } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import type { OrderStatus } from '@/entities/order'
-import { cn } from '@/lib/utils'
 import { ORDER_STATUS_LABELS } from './order-labels'
 
-const BADGE_STYLES: Record<OrderStatus, string> = {
-  pending: 'border-primary text-text-accent',
-  confirmed: 'border-success text-success',
-  rejected: 'border-destructive text-destructive',
+const BADGE_TONES: Record<OrderStatus, 'accent' | 'success' | 'destructive'> = {
+  pending: 'accent',
+  confirmed: 'success',
+  rejected: 'destructive',
 }
 
 /**
@@ -16,15 +16,9 @@ const BADGE_STYLES: Record<OrderStatus, string> = {
 export function OrderStatusBadge({ status, className }: { status: OrderStatus; className?: string }) {
   const Icon = { pending: ClockIcon, confirmed: CircleCheckIcon, rejected: CircleAlertIcon }[status]
   return (
-    <span
-      className={cn(
-        'inline-flex h-6 items-center gap-1 rounded-sm border px-2 text-caption leading-4 font-bold whitespace-nowrap',
-        BADGE_STYLES[status],
-        className,
-      )}
-    >
+    <Badge variant="status" tone={BADGE_TONES[status]} className={className}>
       <Icon aria-hidden className="size-3.5" />
       {ORDER_STATUS_LABELS[status]}
-    </span>
+    </Badge>
   )
 }
