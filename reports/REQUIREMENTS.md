@@ -4,6 +4,14 @@
 - **Método:** leitura e grep do código em `src/`, `tests/`, `lighthouse/` e configs, contra o [spec](../specs/001-nft-marketplace/spec.md) (US-01 a US-10, NFR-01 a NFR-06) e as seções "Regras de domínio críticas", "Qualidade visual e acessibilidade", "Testes e auditorias" e "Entregáveis" do `CLAUDE.md`.
 - **Limite:** nesta revisão nenhum teste foi executado. A coluna "Evidência" aponta onde o requisito está no código e qual teste o cobre. Os resultados de execução citados vêm da última rodada registrada no `PROGRESSO.txt` (e2e + a11y: 42 passed / 0 failed / 27 skipped; visual: 11 passed / 1 failed). O agente frontend ainda estava alterando `src/` durante a revisão (imagens, bundle, tempo real na tela e layout), então os itens marcados como "a reverificar" dependem da rodada final.
 
+> **Atualização 2026-10-27 (rodada final, branch `ajustes-finais`).** Itens do resumo abaixo já resolvidos:
+> **#2/#3** Lighthouse medido em `/`, detalhe e carrinho × mobile/desktop (`reports/lighthouse/SUMMARY.md`; CLS 0 em todas);
+> **#5** relatório Playwright da suíte completa versionado (`reports/playwright`, 54 passed / 0 failed / 27 skipped);
+> **#8** baselines "pagamento" (390) e "início" (768) regeneradas e passando; **#9** tela "Lista de interesse"
+> (`/perfil/lista-de-interesse`) implementada; **#11** imagens e bundle medidos; **#12** repositório versionado
+> (PRs #1–#10). Continuam em aberto: **#1** deploy, **#4** Lighthouse em CI, **#6** e2e do tempo real (T-095),
+> **#7** e2e de perfil/carteiras (T-088), **#10** axe nas telas novas, **#13** shadcn restantes (T-021).
+
 Legenda: **OK** = implementado e coberto por teste ou verificação registrada · **Parcial** = implementado sem teste automatizado, ou com uma parte faltando · **Faltando** = não existe.
 
 ## Resumo: o que falta ou está parcial

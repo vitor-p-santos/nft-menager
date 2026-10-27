@@ -1,34 +1,34 @@
 {
-  "generatedAt": "2026-10-27T19:17:03.201Z",
+  "generatedAt": "2026-10-27T22:05:07.530Z",
   "summary": [
     {
       "page": "/",
       "profile": "mobile",
       "runs": 3,
       "median": {
-        "performance": 38,
-        "lcpMs": 5464,
+        "performance": 62,
+        "lcpMs": 5452,
         "cls": 0,
-        "tbtMs": 2006
+        "tbtMs": 257
       },
       "raw": [
         {
-          "performance": 38,
-          "lcp": 5649.304999999999,
+          "performance": 62,
+          "lcp": 5452.147200000005,
           "cls": 0,
-          "tbt": 2006.2910000000015
-        },
-        {
-          "performance": 38,
-          "lcp": 5442.599171438598,
-          "cls": 0,
-          "tbt": 2796.8060521575917
+          "tbt": 257
         },
         {
           "performance": 41,
-          "lcp": 5464.066875,
+          "lcp": 5585.174300000001,
           "cls": 0,
-          "tbt": 1541.1732499999998
+          "tbt": 1415.970949999999
+        },
+        {
+          "performance": 65,
+          "lcp": 5288.716624999999,
+          "cls": 0,
+          "tbt": 217.0910999999992
         }
       ]
     },
@@ -37,29 +37,29 @@
       "profile": "mobile",
       "runs": 3,
       "median": {
-        "performance": 33,
-        "lcpMs": 6076,
+        "performance": 52,
+        "lcpMs": 5249,
         "cls": 0,
-        "tbtMs": 3874
+        "tbtMs": 689
       },
       "raw": [
         {
-          "performance": 40,
-          "lcp": 5500.954850000001,
+          "performance": 47,
+          "lcp": 5339.286000000002,
           "cls": 0,
-          "tbt": 1773.0000000000005
+          "tbt": 890.8574000000008
         },
         {
-          "performance": 33,
-          "lcp": 6076.147625000001,
+          "performance": 52,
+          "lcp": 5154.646499999997,
           "cls": 0,
-          "tbt": 3873.7801250000007
+          "tbt": 689.1818499999986
         },
         {
-          "performance": 30,
-          "lcp": 6195.89695,
+          "performance": 62,
+          "lcp": 5248.874000000001,
           "cls": 0,
-          "tbt": 6511.60305
+          "tbt": 268.82439999999906
         }
       ]
     },
@@ -68,29 +68,29 @@
       "profile": "mobile",
       "runs": 3,
       "median": {
-        "performance": 46,
-        "lcpMs": 5241,
+        "performance": 53,
+        "lcpMs": 4874,
         "cls": 0,
-        "tbtMs": 925
+        "tbtMs": 684
       },
       "raw": [
         {
-          "performance": 46,
-          "lcp": 5261.559,
+          "performance": 52,
+          "lcp": 4935.304500000002,
           "cls": 0,
-          "tbt": 924.5
+          "tbt": 733.9999999999995
+        },
+        {
+          "performance": 55.00000000000001,
+          "lcp": 4861.48125,
+          "cls": 0,
+          "tbt": 597.5000000000009
         },
         {
           "performance": 53,
-          "lcp": 5029.709000000001,
+          "lcp": 4873.67525,
           "cls": 0,
-          "tbt": 651
-        },
-        {
-          "performance": 45,
-          "lcp": 5240.689375000004,
-          "cls": 0,
-          "tbt": 1083.5
+          "tbt": 684.4999999999977
         }
       ]
     },
@@ -99,29 +99,29 @@
       "profile": "desktop",
       "runs": 3,
       "median": {
-        "performance": 92,
-        "lcpMs": 1337,
+        "performance": 93,
+        "lcpMs": 1314,
         "cls": 0,
-        "tbtMs": 63
+        "tbtMs": 3
       },
       "raw": [
         {
+          "performance": 92,
+          "lcp": 1377.4032,
+          "cls": 0,
+          "tbt": 22.768800000000056
+        },
+        {
+          "performance": 94,
+          "lcp": 1282.6822,
+          "cls": 0,
+          "tbt": 3.0000000000001137
+        },
+        {
           "performance": 93,
-          "lcp": 1300.3488249999991,
+          "lcp": 1313.7011999999997,
           "cls": 0,
-          "tbt": 63
-        },
-        {
-          "performance": 92,
-          "lcp": 1379.911,
-          "cls": 0,
-          "tbt": 28.499999999999886
-        },
-        {
-          "performance": 92,
-          "lcp": 1336.5748750000007,
-          "cls": 0,
-          "tbt": 86
+          "tbt": 0
         }
       ]
     },
@@ -130,29 +130,29 @@
       "profile": "desktop",
       "runs": 3,
       "median": {
-        "performance": 91,
-        "lcpMs": 1426,
+        "performance": 93,
+        "lcpMs": 1334,
         "cls": 0,
-        "tbtMs": 47
+        "tbtMs": 60
       },
       "raw": [
         {
-          "performance": 94,
-          "lcp": 1287.2822500000002,
+          "performance": 93,
+          "lcp": 1333.878325,
           "cls": 0,
-          "tbt": 47
+          "tbt": 60
         },
         {
-          "performance": 91,
-          "lcp": 1425.8565499999995,
+          "performance": 95,
+          "lcp": 1194.0330000000006,
           "cls": 0,
-          "tbt": 66
+          "tbt": 15
         },
         {
-          "performance": 91,
-          "lcp": 1469.5202499999996,
+          "performance": 87,
+          "lcp": 1349.5219999999997,
           "cls": 0,
-          "tbt": 35
+          "tbt": 199
         }
       ]
     },
@@ -161,29 +161,29 @@
       "profile": "desktop",
       "runs": 3,
       "median": {
-        "performance": 87,
-        "lcpMs": 1204,
-        "cls": 0.166,
-        "tbtMs": 8
+        "performance": 95,
+        "lcpMs": 1200,
+        "cls": 0,
+        "tbtMs": 3
       },
       "raw": [
         {
-          "performance": 86,
-          "lcp": 1298.4643000000005,
-          "cls": 0.16646673131213285,
-          "tbt": 10.999999999999886
-        },
-        {
-          "performance": 88,
-          "lcp": 1131.9687999999999,
-          "cls": 0.1736441150689298,
+          "performance": 95,
+          "lcp": 1200.23,
+          "cls": 0,
           "tbt": 0
         },
         {
-          "performance": 87,
-          "lcp": 1203.9903999999997,
-          "cls": 0.16646673131213285,
-          "tbt": 8
+          "performance": 95,
+          "lcp": 1192.7746,
+          "cls": 0,
+          "tbt": 5
+        },
+        {
+          "performance": 91,
+          "lcp": 1412.0141999999996,
+          "cls": 0,
+          "tbt": 2.5
         }
       ]
     }

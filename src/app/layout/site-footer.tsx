@@ -190,7 +190,9 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 items-center gap-6 bg-surface-dark p-8 xl:h-[88px] xl:grid-cols-[1fr_1fr_1fr_228px] xl:gap-[92px]">
+        {/* Figma: uma linha só, centrada na vertical, com sobra à direita do telefone. Abaixo do xl não há
+            colunas de links para alinhar, então os itens ficam na largura natural (antes o contato quebrava) */}
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-4 bg-surface-dark p-8 lg:gap-x-16 xl:grid xl:h-[88px] xl:grid-cols-[1fr_1fr_1fr_228px] xl:gap-[92px]">
           <span className="text-body font-bold tracking-[0.1em] text-foreground">KURIO</span>
           <p className="text-body leading-[22px] text-foreground">
             Feito para colecionadores,
