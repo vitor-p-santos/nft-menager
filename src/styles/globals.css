@@ -1,0 +1,157 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import '@fontsource-variable/roboto-mono';
+
+/*
+ * Design tokens — extraídos das variáveis do Figma (arquivo "Frontend-Challenge", página
+ * "Marketplace de NFTs GreenMint"). Nome Figma → token CSS. Não usar valores hardcoded
+ * em componentes; sempre via estes tokens/utilitários Tailwind.
+ */
+:root {
+  --ink: #140d0a; /* Color/Ink — fundo da página */
+  --surface-card: #241612; /* Color/Surface Card */
+  --surface-dark: #38220f; /* Color/Surface Dark — faixa do footer */
+  --background-elevated: #fbfbfb; /* Color/Background Elevated */
+  --text-primary: #f7f3ec; /* Text/Primary */
+  --foreground-figma: #f5f1eb; /* Color/Foreground */
+  --text-secondary: #cfb28c; /* Text/Secondary */
+  --text-accent: #e89b55; /* Text/Accent — preços */
+  --brand-primary: #d28a4c; /* Color/Primary — botões, destaques */
+  --brand-secondary: #b39463; /* Color/Secondary */
+  --line: #3f2319; /* Color/Border */
+  --line-soft: #55321f; /* Color/Border Soft */
+  --surface-raised: #2f1d15; /* Color/Surface Raised */
+  --gray-light: #ededed; /* Color/Gray Light */
+  /* Gradientes do Figma (Mobile / Detalhes do NFT) */
+  --gradient-detail-hero: linear-gradient(137.64deg, var(--surface-card) 12%, var(--surface-raised) 106.59%);
+  --gradient-cta: linear-gradient(100.37deg, var(--brand-primary) 3.96%, rgb(210 138 76 / 0.8) 121.97%);
+  /* Gradientes do Figma (Mobile / Carrinho de NFTs) */
+  --gradient-checkout: linear-gradient(108.86deg, var(--brand-primary) 3.96%, rgb(210 138 76 / 0.8) 121.97%);
+  --gradient-apply: linear-gradient(96.02deg, rgb(210 138 76 / 0.54) 0.94%, var(--brand-primary) 105.02%);
+
+  /* Aliases semânticos (convenção shadcn/ui) */
+  --background: var(--ink);
+  --foreground: var(--text-primary);
+  --card: var(--surface-card);
+  --card-foreground: var(--text-primary);
+  --popover: var(--surface-card);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--brand-primary);
+  --primary-foreground: var(--ink);
+  --secondary: var(--brand-secondary);
+  --secondary-foreground: var(--ink);
+  --muted: var(--surface-card);
+  --muted-foreground: var(--text-secondary);
+  --accent: var(--line-soft);
+  --accent-foreground: var(--text-accent);
+  /* PENDENTE: cor exata do asterisco obrigatório/erro não é variável no Figma — confirmar via get_design_context */
+  --destructive: #e5674a;
+  --success: #6fbf73;
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--brand-primary);
+
+  --font-sans-family: 'Roboto Mono Variable', ui-monospace, monospace;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-ink: var(--ink);
+  --color-surface-card: var(--surface-card);
+  --color-surface-dark: var(--surface-dark);
+  --color-surface-raised: var(--surface-raised);
+  --color-elevated: var(--background-elevated);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-accent: var(--text-accent);
+  --color-border-soft: var(--line-soft);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Raios do Figma */
+  --radius-sm: 4px; /* paginação */
+  --radius-md: 6px; /* botões, inputs */
+  --radius-lg: 8px; /* cards de promo e blog */
+  --radius-xl: 15px; /* arte no card do catálogo */
+  --radius-2xl: 20px; /* cards mobile */
+  --radius-3xl: 24px; /* imagem do hero */
+  --radius-field: 10px; /* campos e botão das telas de login/cadastro mobile (medido no recorte m-05) */
+
+  --font-sans: var(--font-sans-family);
+
+  /* Escala tipográfica do Figma (tamanho / line-height) */
+  --text-tiny: 0.5625rem; /* 9 — Tiny/9 Bold */
+  --text-micro: 0.625rem; /* 10 — Tiny/10 Medium */
+  --text-caption: 0.75rem; /* 12 — Caption/12 */
+  --text-caption-lg: 0.8125rem; /* 13 — Caption/13 */
+  --text-body: 0.875rem; /* 14 — Body/14 */
+  --text-body-md: 0.9375rem; /* 15 — Body/15 */
+  --text-body-lg: 1rem; /* 16 — Body Large/16 */
+  --text-body-xl: 1.0625rem; /* 17 — Body Large/17 */
+  --text-lead: 1.125rem; /* 18 — Body Large/18 */
+  --text-title-sm: 1.25rem; /* 20 — Title/20 */
+  --text-title: 1.375rem; /* 22 — Title/22 Bold */
+  --text-heading-lg: 1.75rem; /* 28 — Heading/28 Bold */
+  --text-heading: 1.5rem; /* 24 — Heading/24 Bold */
+  --text-display: 2.6875rem; /* 43 — Display/43 Bold */
+  --text-display--line-height: 4.375rem; /* 70 */
+
+  /* Breakpoints do desafio: 390 (base), 768, 1440 */
+  --breakpoint-md: 48rem;
+  --breakpoint-xl: 90rem;
+
+  /* Sombras do Figma (detalhe do NFT) */
+  --shadow-stepper: 0 6.6px 9.9px rgb(20 13 10 / 0.15); /* botões +/− desktop */
+  --shadow-stepper-sm: 0 4px 6px rgb(20 13 10 / 0.15); /* botões +/− mobile */
+  --shadow-buy-bar: 0 0 10px rgb(10 6 4 / 0.45); /* Buy Bar mobile */
+  --shadow-cart-card: 0 6px 20px rgb(10 6 4 / 0.45); /* card do carrinho mobile */
+  --shadow-promo: 0 6px 10px rgb(10 6 4 / 0.45); /* campo de cupom mobile (drop-shadow) */
+
+  --animate-shimmer: shimmer 1.5s linear infinite;
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    overflow-x: clip;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
