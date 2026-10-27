@@ -1,0 +1,191 @@
+{
+  "generatedAt": "2026-10-27T19:17:03.201Z",
+  "summary": [
+    {
+      "page": "/",
+      "profile": "mobile",
+      "runs": 3,
+      "median": {
+        "performance": 38,
+        "lcpMs": 5464,
+        "cls": 0,
+        "tbtMs": 2006
+      },
+      "raw": [
+        {
+          "performance": 38,
+          "lcp": 5649.304999999999,
+          "cls": 0,
+          "tbt": 2006.2910000000015
+        },
+        {
+          "performance": 38,
+          "lcp": 5442.599171438598,
+          "cls": 0,
+          "tbt": 2796.8060521575917
+        },
+        {
+          "performance": 41,
+          "lcp": 5464.066875,
+          "cls": 0,
+          "tbt": 1541.1732499999998
+        }
+      ]
+    },
+    {
+      "page": "/nft/nft-emerald-ape-042",
+      "profile": "mobile",
+      "runs": 3,
+      "median": {
+        "performance": 33,
+        "lcpMs": 6076,
+        "cls": 0,
+        "tbtMs": 3874
+      },
+      "raw": [
+        {
+          "performance": 40,
+          "lcp": 5500.954850000001,
+          "cls": 0,
+          "tbt": 1773.0000000000005
+        },
+        {
+          "performance": 33,
+          "lcp": 6076.147625000001,
+          "cls": 0,
+          "tbt": 3873.7801250000007
+        },
+        {
+          "performance": 30,
+          "lcp": 6195.89695,
+          "cls": 0,
+          "tbt": 6511.60305
+        }
+      ]
+    },
+    {
+      "page": "/carrinho",
+      "profile": "mobile",
+      "runs": 3,
+      "median": {
+        "performance": 46,
+        "lcpMs": 5241,
+        "cls": 0,
+        "tbtMs": 925
+      },
+      "raw": [
+        {
+          "performance": 46,
+          "lcp": 5261.559,
+          "cls": 0,
+          "tbt": 924.5
+        },
+        {
+          "performance": 53,
+          "lcp": 5029.709000000001,
+          "cls": 0,
+          "tbt": 651
+        },
+        {
+          "performance": 45,
+          "lcp": 5240.689375000004,
+          "cls": 0,
+          "tbt": 1083.5
+        }
+      ]
+    },
+    {
+      "page": "/",
+      "profile": "desktop",
+      "runs": 3,
+      "median": {
+        "performance": 92,
+        "lcpMs": 1337,
+        "cls": 0,
+        "tbtMs": 63
+      },
+      "raw": [
+        {
+          "performance": 93,
+          "lcp": 1300.3488249999991,
+          "cls": 0,
+          "tbt": 63
+        },
+        {
+          "performance": 92,
+          "lcp": 1379.911,
+          "cls": 0,
+          "tbt": 28.499999999999886
+        },
+        {
+          "performance": 92,
+          "lcp": 1336.5748750000007,
+          "cls": 0,
+          "tbt": 86
+        }
+      ]
+    },
+    {
+      "page": "/nft/nft-emerald-ape-042",
+      "profile": "desktop",
+      "runs": 3,
+      "median": {
+        "performance": 91,
+        "lcpMs": 1426,
+        "cls": 0,
+        "tbtMs": 47
+      },
+      "raw": [
+        {
+          "performance": 94,
+          "lcp": 1287.2822500000002,
+          "cls": 0,
+          "tbt": 47
+        },
+        {
+          "performance": 91,
+          "lcp": 1425.8565499999995,
+          "cls": 0,
+          "tbt": 66
+        },
+        {
+          "performance": 91,
+          "lcp": 1469.5202499999996,
+          "cls": 0,
+          "tbt": 35
+        }
+      ]
+    },
+    {
+      "page": "/carrinho",
+      "profile": "desktop",
+      "runs": 3,
+      "median": {
+        "performance": 87,
+        "lcpMs": 1204,
+        "cls": 0.166,
+        "tbtMs": 8
+      },
+      "raw": [
+        {
+          "performance": 86,
+          "lcp": 1298.4643000000005,
+          "cls": 0.16646673131213285,
+          "tbt": 10.999999999999886
+        },
+        {
+          "performance": 88,
+          "lcp": 1131.9687999999999,
+          "cls": 0.1736441150689298,
+          "tbt": 0
+        },
+        {
+          "performance": 87,
+          "lcp": 1203.9903999999997,
+          "cls": 0.16646673131213285,
+          "tbt": 8
+        }
+      ]
+    }
+  ]
+}

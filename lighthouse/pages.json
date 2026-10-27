@@ -1,0 +1,4 @@
+{
+  "baseUrl": "http://localhost:4173",
+  "pages": ["/", "/nft/nft-emerald-ape-042", "/carrinho"]
+}
