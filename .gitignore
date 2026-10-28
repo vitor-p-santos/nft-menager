@@ -33,3 +33,4 @@ playwright/.cache
 
 # Perfis temporários do Chrome criados pelo Lighthouse no WSL
 C:*
+.vercel

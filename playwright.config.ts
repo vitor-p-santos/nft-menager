@@ -1,7 +1,9 @@
 import { defineConfig, devices } from '@playwright/test'
 
 const PORT = 4173
-const baseURL = `http://localhost:${PORT}`
+/** Com PLAYWRIGHT_BASE_URL a suíte roda contra um deploy publicado (ex.: Vercel) e não sobe o preview. */
+const remoteURL = process.env.PLAYWRIGHT_BASE_URL
+const baseURL = remoteURL ?? `http://localhost:${PORT}`
 
 /**
  * Roda contra o build de produção (vite preview) com MSW ativo, para que
@@ -31,10 +33,12 @@ export default defineConfig({
     { name: 'tablet-768', use: { ...devices['Desktop Chrome'], viewport: { width: 768, height: 1024 } } },
     { name: 'desktop-1440', use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } } },
   ],
-  webServer: {
-    command: 'npm run build && npm run preview',
-    url: baseURL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 180_000,
-  },
+  webServer: remoteURL
+    ? undefined
+    : {
+        command: 'npm run build && npm run preview',
+        url: baseURL,
+        reuseExistingServer: !process.env.CI,
+        timeout: 180_000,
+      },
 })

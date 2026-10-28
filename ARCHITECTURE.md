@@ -231,7 +231,9 @@ Os ciclos de import são barrados pelo lint (`import/no-cycle`).
 - **Menu da conta (WCAG 2.5.3):** sem foto, o gatilho do header mostra as iniciais; o nome acessível passa a contê-las ("Conta de Ana Ribeiro, AR"). Vírgula e não parênteses: o axe descarta o texto entre parênteses na comparação.
 - **Footer:** o layout desktop do Figma começa em **1280** (breakpoint `laptop`, 80rem, em `globals.css`), e não no `xl` de 1440: em 1280 o container já tem os 1200 px do Figma, e só as margens laterais mudam. A faixa KURIO/contato tem 88 px e itens centrados em todas as larguras; de 1024 a 1279 ela usa 4 colunas com `gap-8`, alinhando KURIO e o e-mail às 2 colunas de links de baixo.
 
+- **Deploy (T-104):** Vercel, <https://nft-marketplace-ten-weld.vercel.app>. O MSW roda em produção. O `.vercelignore` deixa de fora do upload o que não entra no build. A suíte aceita `PLAYWRIGHT_BASE_URL` para rodar contra o site publicado (sem preview local); ela passou completa contra a URL.
+- **Favoritos sem sessão:** `useFavorite` só busca `GET /me/favorites` com usuário na sessão. Antes, todo card e detalhe disparava um 401 para o visitante (achado pela varredura de console no site publicado); o 401 do clique continua vindo da mutation, que grava a ação pendente.
+
 ## Pendências na entrega
 Levantadas na revisão final (T-105); detalhes e evidências em [`reports/REQUIREMENTS.md`](reports/REQUIREMENTS.md).
-- Deploy público (T-104) e URL no README: depende do login na Vercel.
 - "Minha coleção" continua "Disponível em breve" (fora do spec).

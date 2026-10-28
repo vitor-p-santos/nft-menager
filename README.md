@@ -4,7 +4,7 @@ Marketplace de NFTs da marca Kurio, implementado a partir do Figma do desafio co
 
 Não há servidor real: a API REST e o Socket.IO são simulados no navegador pelo MSW (`@mswjs/socket.io-binding` para o tempo real), inclusive no deploy.
 
-**URL pública:** (pendente)
+**URL pública:** <https://nft-marketplace-ten-weld.vercel.app>
 
 Status das tarefas em [`TASKS.md`](TASKS.md). Revisão dos requisitos contra o código em [`reports/REQUIREMENTS.md`](reports/REQUIREMENTS.md).
 
@@ -151,7 +151,6 @@ reports/        REQUIREMENTS.md, playwright/ e lighthouse/
 - **Fora do escopo ou incompleto** (lista completa em [`reports/REQUIREMENTS.md`](reports/REQUIREMENTS.md)):
   - "Minha coleção" aparece como "Disponível em breve". Os favoritos ficam em "Lista de interesse" (`/perfil/lista-de-interesse`).
   - "Ofertas", "Arquivos baixados" e "Suporte" do menu do perfil ficam ocultos (decisão D-06).
-  - Deploy público pendente.
 - Divergências pontuais do Figma (assets provisórios, telas sem frame) estão listadas por fase no `ARCHITECTURE.md`.
 
 ## Documentação
@@ -163,6 +162,9 @@ reports/        REQUIREMENTS.md, playwright/ e lighthouse/
 - [`TASKS.md`](TASKS.md): checklist com status verificado
 
 ## Deploy
-Configurado para a Vercel (`vercel.json`): `npm run build`, saída em `dist/` e rewrite de SPA que preserva `mockServiceWorker.js` e `assets/`. O MSW também roda em produção e serve os dados.
+Publicado na Vercel: **<https://nft-marketplace-ten-weld.vercel.app>**
 
-**URL pública:** (pendente)
+- `vercel.json`: `npm run build`, saída em `dist/` e rewrite de SPA que preserva `mockServiceWorker.js` e `assets/`. O MSW também roda em produção e serve os dados.
+- `.vercelignore`: o upload deixa de fora o que não entra no build (`reports`, `design`, `dist` local, worktrees em `.claude`).
+- Novo deploy de produção: `npx vercel deploy --prod` (exige `vercel login`). As URLs `*-vitors-projects-*.vercel.app` têm a proteção de deploy da Vercel; a URL pública é o alias acima.
+- Para rodar a suíte contra o site publicado: `PLAYWRIGHT_BASE_URL=https://nft-marketplace-ten-weld.vercel.app npx playwright test` (sem preview local).

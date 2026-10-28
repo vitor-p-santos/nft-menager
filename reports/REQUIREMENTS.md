@@ -15,7 +15,8 @@
 > carteiras e lista de interesse (`tests/a11y/account.spec.ts`, 3 viewports), que achou e levou à correção do
 > nome acessível do menu da conta (WCAG 2.5.3); **#13** Input, Select, Checkbox, RadioGroup e Badge (T-021);
 > **#4** CI em `.github/workflows/ci.yml` (check, Playwright e Lighthouse com orçamento de CLS ≤ 0,1).
-> Continua em aberto apenas: **#1** deploy público (depende do login na Vercel).
+> **#1** deploy público em 2026-10-28: <https://nft-marketplace-ten-weld.vercel.app> (Vercel, MSW em produção); a suíte Playwright completa passa contra a URL
+> publicada (69 passed / 0 failed, `PLAYWRIGHT_BASE_URL`). Nenhum item do resumo continua em aberto.
 
 Legenda: **OK** = implementado e coberto por teste ou verificação registrada · **Parcial** = implementado sem teste automatizado, ou com uma parte faltando · **Faltando** = não existe.
 
@@ -23,7 +24,7 @@ Legenda: **OK** = implementado e coberto por teste ou verificação registrada �
 
 | # | Item | Status | O que falta |
 |---|---|---|---|
-| 1 | Deploy público (NFR-06, T-104) | Faltando | `vercel.json` existe, mas não há deploy nem URL. A Vercel CLI não está instalada nem logada; o deploy depende do login do usuário. |
+| 1 | Deploy público (NFR-06, T-104) | OK (2026-10-28) | <https://nft-marketplace-ten-weld.vercel.app>; suíte Playwright completa contra a URL publicada: 69 passed / 0 failed. |
 | 2 | Relatório Lighthouse (NFR-04, T-102) | Faltando | O script existe (`lighthouse/run.mjs`), mas `reports/lighthouse/` não existe: nenhuma medição foi registrada. |
 | 3 | Lighthouse por página | Parcial | `lighthouse/pages.json` só lista `/`. O requisito pede "3 execuções por página × perfil"; detalhe, carrinho e checkout não são auditados. |
 | 4 | Lighthouse "em CI" (tabela da stack no `CLAUDE.md`) | Faltando | Não há `.github/workflows` nem `lighthouserc`. O `@lhci/cli` está nas devDependencies e não é usado. |
@@ -154,7 +155,7 @@ Legenda: **OK** = implementado e coberto por teste ou verificação registrada �
 | NFR-03 | WCAG 2.1 AA, teclado, foco visível, `prefers-reduced-motion` | Parcial | `tests/a11y/*` (cobertura no item 10 do resumo); skip-link em `routes/__root.tsx`; reduced motion em `styles/globals.css`, `features/home/hooks/use-reduced-motion.ts`, `realtime-status.tsx` |
 | NFR-04 | Lighthouse 3× por página e perfil, medianas de LCP/CLS/TBT | Parcial | O script cumpre o método (`lighthouse/run.mjs`, `RUNS = 3`, mobile/desktop, medianas), mas só para `/`, e nunca foi executado (itens 2 a 4) |
 | NFR-05 | Baselines visuais: início, detalhe, carrinho, pagamento | Parcial | As 4 baselines existem em `tests/visual/__screenshots__/{mobile-390,tablet-768,desktop-1440}`; "início" tablet e "pagamento" mobile estão pendentes (item 8) |
-| NFR-06 | Deploy público com MSW em produção | Faltando | `vercel.json` e `main.tsx` (MSW em produção salvo `VITE_ENABLE_MOCKS=false`) prontos; sem deploy |
+| NFR-06 | Deploy público com MSW em produção | OK | <https://nft-marketplace-ten-weld.vercel.app> (`vercel.json`, `.vercelignore`); e2e, a11y e visuais passam contra a URL publicada |
 
 ## `CLAUDE.md`: regras de domínio, qualidade e entregáveis
 
@@ -178,5 +179,5 @@ Legenda: **OK** = implementado e coberto por teste ou verificação registrada �
 | `README.md` e `ARCHITECTURE.md` com contratos REST e eventos | OK | `README.md`, `ARCHITECTURE.md`, `specs/001-nft-marketplace/contracts/*` |
 | Testes e configs reproduzíveis | OK | `playwright.config.ts` (build de produção + preview), `lighthouse/run.mjs`, `.env.example` |
 | Relatórios de testes e auditorias | Faltando | itens 2 e 5 |
-| Deploy público configurado | Parcial | configuração feita, sem deploy (item 1) |
+| Deploy público configurado | OK | <https://nft-marketplace-ten-weld.vercel.app> (item 1) |
 | Versionamento | Faltando | sem commits (item 12) |
