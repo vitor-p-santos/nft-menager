@@ -1,7 +1,7 @@
-import axios, { isAxiosError, type AxiosRequestConfig } from 'axios'
+import axios, { isAxiosError, type AxiosRequestConfig, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 import type { z } from 'zod'
 import { getCartId } from './cart-id'
-import { toApiError, type ApiError } from './errors'
+import { ApiError, toApiError } from './errors'
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL ?? '/api'
 export const API_TIMEOUT_MS = 10_000
@@ -44,9 +44,61 @@ http.interceptors.request.use((config) => {
   return config
 })
 
+type TransportRecovery = {
+  /** Tenta fazer as próximas requisições chegarem à API (ex.: reativar o worker do MSW). `true` se conseguiu. */
+  recover: () => Promise<boolean>
+}
+
+let transportRecovery: TransportRecovery | null = null
+
+/**
+ * Registrado pelo bootstrap quando a API é simulada no navegador (MSW). Sem ele, uma resposta fora do
+ * contrato segue o caminho normal de erro.
+ */
+export function configureTransportRecovery(recovery: TransportRecovery | null) {
+  transportRecovery = recovery
+}
+
+/**
+ * A API sempre responde JSON: corpo vazio só em sucesso (202/204), e todo erro traz `{ code, message }`.
+ * Fora disso (o `index.html` do rewrite de SPA, o 404 do host, vazio ou em texto), a requisição não chegou
+ * à API: com o MSW, o navegador desligou o service worker ocioso e ele voltou sem saber desta aba.
+ */
+function isOffContract(response: AxiosResponse): boolean {
+  if (String(response.headers['content-type'] ?? '').includes('application/json')) return false
+  const body = response.data as unknown
+  const empty = body === '' || body === null || body === undefined
+  return response.status >= 400 || !empty
+}
+
+type RetriableConfig = InternalAxiosRequestConfig & { _transportRetried?: boolean }
+
+/** Reativa o transporte e repete a requisição uma vez; `null` se não há como recuperar. */
+async function retryAfterRecovery(config: RetriableConfig | undefined) {
+  if (!transportRecovery || !config || config._transportRetried) return null
+  if (!(await transportRecovery.recover())) return null
+  config._transportRetried = true
+  return http.request(config)
+}
+
+const offContractError = (status: number) =>
+  new ApiError({ kind: 'unavailable', status, code: 'off_contract', message: 'O serviço não respondeu como esperado. Tente novamente.' })
+
 http.interceptors.response.use(
-  (response) => response,
-  (error: unknown) => {
+  async (response) => {
+    if (!isOffContract(response)) return response
+    const retried = await retryAfterRecovery(response.config)
+    if (retried) return retried
+    throw offContractError(response.status)
+  },
+  async (error: unknown) => {
+    const response = isAxiosError(error) ? error.response : undefined
+    if (response && isOffContract(response)) {
+      const retried = await retryAfterRecovery(response.config)
+      if (retried) return retried
+      // O 404/405 do host não é um "não encontrado" da API
+      return Promise.reject(offContractError(response.status))
+    }
     const apiError = toApiError(error)
     if (apiError.kind === 'unauthorized') {
       const header = isAxiosError(error) ? error.config?.headers?.Authorization : undefined
