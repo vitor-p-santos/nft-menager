@@ -1,9 +1,8 @@
 import { useState } from 'react'
+import type { LiveFeedback } from '@/components/feedback/live-message'
 import { toApiError } from '@/lib/api'
 import { useRemoveCartItem, useUpdateCartItem } from '../api/queries'
 import type { CartItem } from '../schemas/cart'
-
-export type CartFeedback = { tone: 'status' | 'error'; message: string } | null
 
 /**
  * Alterar quantidade e remover itens: expõe qual item está pendente (para `aria-busy` e para
@@ -12,7 +11,7 @@ export type CartFeedback = { tone: 'status' | 'error'; message: string } | null
 export function useCartItemActions() {
   const update = useUpdateCartItem()
   const remove = useRemoveCartItem()
-  const [feedback, setFeedback] = useState<CartFeedback>(null)
+  const [feedback, setFeedback] = useState<LiveFeedback>(null)
 
   function changeQuantity(item: CartItem, quantity: number) {
     setFeedback(null)

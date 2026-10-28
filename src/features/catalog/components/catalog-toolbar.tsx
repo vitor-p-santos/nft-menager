@@ -9,6 +9,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { buttonVariants } from '@/components/ui/button-variants'
 import {
   CATALOG_SECTION_ID,
   CATALOG_SORTS,
@@ -86,10 +87,7 @@ export function FiltersButton({ count, onClick, className }: { count: number; on
       type="button"
       onClick={onClick}
       aria-haspopup="dialog"
-      className={cn(
-        'flex h-10 cursor-pointer items-center gap-2 rounded-md bg-primary px-3 text-body-md leading-5 font-bold text-primary-foreground hover:bg-primary/90',
-        className,
-      )}
+      className={cn(buttonVariants({ size: 'none' }), 'h-10 gap-2 rounded-md px-3 text-body-md leading-5 font-bold', className)}
     >
       <img src={filterIcon} alt="" width={16} height={16} />
       Filtros

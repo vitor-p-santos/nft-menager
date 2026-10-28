@@ -1,20 +1,23 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery } from '@tanstack/react-query'
-import { Link, useCanGoBack, useNavigate, useRouter } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { ChevronDownIcon } from 'lucide-react'
-import { useId, useRef, useState, type ReactNode } from 'react'
+import { useId, useState, type ReactNode } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
-import arrowBack from '@/assets/icons/arrow-back.svg'
 import { Skeleton } from '@/components/feedback/skeleton'
 import { EmptyState, ErrorState } from '@/components/feedback/states'
 import { Container } from '@/components/layout/container'
+import { Breadcrumbs, PageHeading } from '@/components/layout/page-heading'
+import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { cartQueries } from '@/entities/cart'
 import { CATALOG_SECTION_ID } from '@/entities/catalog'
+import { ExploreLink } from '@/entities/catalog/explore-link'
 import { useCurrentUser, type User } from '@/entities/session'
-import { sameWalletAddress, stripEthSuffix, walletQueries, type Wallet, type WalletProvider } from '@/entities/wallet'
+import { stripEthSuffix, walletQueries, type Wallet, type WalletProvider } from '@/entities/wallet'
 import { cn } from '@/lib/utils'
 import { useCheckoutFlow, type CheckoutFlow } from '../hooks/use-checkout-flow'
+import { useCollectorWallet } from '../hooks/use-collector-wallet'
 import { collectorDefaults, collectorSchema, type CollectorFormValues, type CollectorInput } from '../schemas/checkout'
 import { CollectorFields, type CollectorForm } from './collector-form'
 import { OrderItems, OrderReviewSkeleton, OrderTotals } from './order-review'
@@ -23,60 +26,21 @@ import { describeChange } from './quote-change-text'
 import { QuoteChangesDialog } from './quote-changes-dialog'
 import { ProviderOptions, SavedWallets, type WalletMenuActions } from './wallet-options'
 
-/** Voltar (topo mobile): histórico quando possível; senão, o carrinho. */
-function BackButton() {
-  const router = useRouter()
-  const canGoBack = useCanGoBack()
-  return (
-    <button
-      type="button"
-      aria-label="Voltar"
-      onClick={() => (canGoBack ? router.history.back() : void router.navigate({ to: '/carrinho' }))}
-      className="flex size-[35px] shrink-0 cursor-pointer items-center justify-center rounded-full border border-border bg-surface-raised"
-    >
-      <img src={arrowBack} alt="" width={13} height={7} className="rotate-90" />
-    </button>
-  )
-}
-
 function Heading() {
   return (
     <>
-      <nav aria-label="Trilha de navegação" className="hidden pt-8 md:block">
-        <ol className="flex gap-1 text-body-md leading-4 font-bold text-foreground">
-          <li>
-            <Link to="/" className="rounded-sm hover:text-text-accent">
-              Início
-            </Link>
-          </li>
-          <li aria-hidden>/</li>
-          <li>
-            <Link to="/" hash={CATALOG_SECTION_ID} className="rounded-sm hover:text-text-accent">
-              Mercado
-            </Link>
-          </li>
-          <li aria-hidden>/</li>
-          <li aria-current="page">Pagamento</li>
-        </ol>
-      </nav>
+      <Breadcrumbs
+        className="hidden pt-8 md:block"
+        items={[
+          { label: 'Início', to: '/' },
+          { label: 'Mercado', to: '/', hash: CATALOG_SECTION_ID },
+          { label: 'Pagamento' },
+        ]}
+      />
       {/* Mobile (Figma "Pagamento com carteira"): voltar + título */}
-      <div className="flex items-center gap-6 md:hidden">
-        <BackButton />
-        <h1 className="text-title-sm leading-6 font-bold text-foreground">Pagamento com carteira</h1>
-      </div>
-      <h1 className="sr-only max-md:hidden">Pagamento</h1>
+      <PageHeading title="Pagamento com carteira" desktopTitle="Pagamento" align="start" fallback={{ to: '/carrinho' }} />
     </>
   )
-}
-
-/** Valores do formulário a partir da carteira salva (o sufixo ".eth" é fixo no campo do ENS). */
-function walletFields(wallet: Wallet) {
-  return {
-    network: wallet.network,
-    walletAddress: wallet.address,
-    walletProvider: wallet.provider,
-    ensName: stripEthSuffix(wallet.ensName),
-  }
 }
 
 function initialValues(user: User, wallet: Wallet | null): CollectorFormValues {
@@ -105,13 +69,6 @@ type CheckoutFormProps = {
  */
 function CheckoutForm({ user, wallets, flow, walletActions }: CheckoutFormProps) {
   const primary = wallets.find((w) => w.role === 'primary') ?? wallets[0] ?? null
-  const [selectedWalletId, setSelected] = useState<string | null>(primary?.id ?? null)
-  // Seleção atual para callbacks assíncronos (a remoção resolve depois de outros renders)
-  const selectedRef = useRef(selectedWalletId)
-  function setSelectedWalletId(id: string | null) {
-    selectedRef.current = id
-    setSelected(id)
-  }
   const [detailsOpen, setDetailsOpen] = useState(primary === null)
   const detailsId = useId()
   const form: CollectorForm = useForm<CollectorFormValues, unknown, CollectorInput>({
@@ -120,25 +77,9 @@ function CheckoutForm({ user, wallets, flow, walletActions }: CheckoutFormProps)
     mode: 'onTouched',
   })
   const { setValue, handleSubmit, setFocus } = form
+  const { selectedWalletId, selectWallet, toggleOtherWallet, walletRemoved, savedWalletIdFor } = useCollectorWallet(form, wallets, primary)
   const provider = useWatch({ control: form.control, name: 'walletProvider' }) as WalletProvider | undefined
   const busy = flow.isSubmitting
-
-  function selectWallet(wallet: Wallet) {
-    setSelectedWalletId(wallet.id)
-    for (const [key, value] of Object.entries(walletFields(wallet))) {
-      setValue(key as keyof ReturnType<typeof walletFields>, value, { shouldDirty: true, shouldValidate: form.formState.isSubmitted })
-    }
-  }
-
-  function toggleOtherWallet(other: boolean) {
-    if (!other) {
-      if (primary) selectWallet(wallets.find((w) => w.id === selectedWalletId) ?? primary)
-      return
-    }
-    setSelectedWalletId(null)
-    setValue('walletAddress', '', { shouldDirty: true })
-    setValue('ensName', '', { shouldDirty: true })
-  }
 
   /** "Trocar carteira" (mobile): carteira digitada no formulário, que abre já com o foco no endereço. */
   function switchWallet() {
@@ -147,28 +88,12 @@ function CheckoutForm({ user, wallets, flow, walletActions }: CheckoutFormProps)
     requestAnimationFrame(() => setFocus('walletAddress'))
   }
 
-  /** Carteira escolhida removida (menu ⋮): passa para outra salva ou para a carteira digitada. */
-  function walletRemoved(wallet: Wallet) {
-    if (wallet.id !== selectedRef.current) return
-    const next = wallets.find((w) => w.id !== wallet.id)
-    if (next) selectWallet(next)
-    else toggleOtherWallet(true)
-  }
-
   function setProvider(value: WalletProvider) {
     setValue('walletProvider', value, { shouldDirty: true, shouldValidate: form.formState.isSubmitted })
   }
 
   const onSubmit = handleSubmit(
-    (collector) => {
-      const saved = wallets.find((w) => w.id === selectedWalletId)
-      // A carteira salva só vale se o formulário ainda aponta para ela (senão é carteira digitada)
-      const walletId =
-        saved && saved.network === collector.network && sameWalletAddress(saved.address, collector.walletAddress, collector.network)
-          ? saved.id
-          : null
-      flow.submit({ walletId, network: collector.network, collector })
-    },
+    (collector) => flow.submit({ walletId: savedWalletIdFor(collector), network: collector.network, collector }),
     (errors) => {
       // No mobile os campos ficam recolhidos: abre e leva o foco ao primeiro erro
       setDetailsOpen(true)
@@ -242,12 +167,10 @@ function CheckoutForm({ user, wallets, flow, walletActions }: CheckoutFormProps)
           </output>
         )}
         {quote ? (
-          <>
-            <div className="hidden flex-col gap-3 md:flex">
-              <OrderItems items={quote.items} />
-              <OrderTotals totals={quote.totals} couponCode={quote.coupon?.eligible ? quote.coupon.code : null} />
-            </div>
-          </>
+          <div className="hidden flex-col gap-3 md:flex">
+            <OrderItems items={quote.items} />
+            <OrderTotals totals={quote.totals} couponCode={quote.coupon?.eligible ? quote.coupon.code : null} />
+          </div>
         ) : (
           <OrderReviewSkeleton className="max-md:hidden" />
         )}
@@ -255,7 +178,7 @@ function CheckoutForm({ user, wallets, flow, walletActions }: CheckoutFormProps)
           <ProviderOptions variant="desktop" value={provider} onChange={setProvider} error={providerError} />
         </div>
 
-        <p aria-live="assertive" role="alert" className={cn('text-center text-body leading-5 text-destructive', !flow.error && 'sr-only')}>
+        <p role="alert" className={cn('text-center text-body leading-5 text-destructive', !flow.error && 'sr-only')}>
           {flow.error}
         </p>
         {/* Mobile: o total vai na barra fixa, logo acima do botão (m-04), para nunca ficar coberto por ela */}
@@ -265,17 +188,15 @@ function CheckoutForm({ user, wallets, flow, walletActions }: CheckoutFormProps)
               <OrderTotals totals={quote.totals} compact />
             </div>
           )}
-          <button
+          <Button
             type="submit"
+            variant="checkout"
+            size="pill"
             disabled={busy || !quote}
-            className={cn(
-              'flex w-full cursor-pointer items-center justify-center font-bold text-primary-foreground disabled:cursor-wait disabled:opacity-60',
-              'h-[60px] rounded-[40px] bg-[image:var(--gradient-checkout)] text-body-md',
-              'md:mt-2 md:h-[45px] md:rounded-md md:bg-primary md:bg-none',
-            )}
+            className="flex w-full text-body-md disabled:cursor-wait disabled:opacity-60 md:mt-2 md:h-[45px] md:rounded-md"
           >
             {busy ? 'Processando…' : 'Confirmar compra'}
-          </button>
+          </Button>
         </div>
       </div>
     </form>
@@ -349,11 +270,7 @@ export function CheckoutPage({ walletActions }: { walletActions?: WalletMenuActi
       <EmptyState
         title="Seu carrinho está vazio"
         description="Adicione NFTs ao carrinho para finalizar uma compra."
-        action={
-          <Link to="/" hash={CATALOG_SECTION_ID} className={buttonVariants({ size: 'lg' })}>
-            Explorar o mercado
-          </Link>
-        }
+        action={<ExploreLink />}
       />
     )
   } else if (user && wallets.data) {

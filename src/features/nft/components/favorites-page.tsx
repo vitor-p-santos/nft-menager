@@ -1,14 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
 import { ErrorState, EmptyState } from '@/components/feedback/states'
-import { buttonVariants } from '@/components/ui/button-variants'
-import { CATALOG_SECTION_ID } from '@/entities/catalog'
-import { NftCard, NftCardSkeleton } from '@/entities/nft/nft-card'
+import { ExploreLink } from '@/entities/catalog/explore-link'
+import { NFT_GRID_CLASS, NftCard, NftCardSkeleton } from '@/entities/nft/nft-card'
 import { favoritesQueries } from '../api/queries'
 import { FavoriteButton } from './favorite-button'
-
-/** Mesma grade do catálogo (Figma "Products" / Mobile "Grid"): 2 colunas no mobile, 3 a partir de `md`. */
-const GRID = 'grid grid-cols-2 gap-x-4 gap-y-6 md:grid-cols-3 md:gap-x-[34px] md:gap-y-12'
 
 /**
  * "Lista de interesse" (`/perfil/lista-de-interesse`): os favoritos do usuário (`GET /me/favorites`)
@@ -23,7 +18,7 @@ export function FavoritesPage() {
   let content
   if (list && list.length > 0) {
     content = (
-      <ul aria-label="NFTs da lista de interesse" className={GRID}>
+      <ul aria-label="NFTs da lista de interesse" className={NFT_GRID_CLASS}>
         {list.map((nft, index) => (
           <li key={nft.id}>
             <NftCard nft={nft} priority={index < 3} action={<FavoriteButton nftId={nft.id} nftName={nft.name} variant="badge" />} />
@@ -36,11 +31,7 @@ export function FavoritesPage() {
       <EmptyState
         title="Sua lista de interesse está vazia"
         description="Toque no coração de um NFT para guardá-lo aqui."
-        action={
-          <Link to="/" hash={CATALOG_SECTION_ID} className={buttonVariants({ size: 'lg' })}>
-            Explorar o mercado
-          </Link>
-        }
+        action={<ExploreLink />}
       />
     )
   } else if (favorites.isError) {
@@ -53,7 +44,7 @@ export function FavoritesPage() {
     )
   } else {
     content = (
-      <ul aria-hidden className={GRID}>
+      <ul aria-hidden className={NFT_GRID_CLASS}>
         {Array.from({ length: 6 }, (_, i) => (
           <li key={i}>
             <NftCardSkeleton />

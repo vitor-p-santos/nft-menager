@@ -1,8 +1,8 @@
-import { Link, useCanGoBack, useRouter } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { ChevronDownIcon, HeartIcon, LogOutIcon, MapPinIcon, ShoppingCartIcon, UserIcon, type LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
-import arrowBack from '@/assets/icons/arrow-back.svg'
 import { Container } from '@/components/layout/container'
+import { PageHeading } from '@/components/layout/page-heading'
 import { cn } from '@/lib/utils'
 
 export type ProfileSection = 'dados' | 'carteiras' | 'favoritos'
@@ -70,21 +70,6 @@ function SignOutItem({ signOut }: { signOut: (props: { className: string; childr
   )
 }
 
-function BackButton() {
-  const router = useRouter()
-  const canGoBack = useCanGoBack()
-  return (
-    <button
-      type="button"
-      aria-label="Voltar"
-      onClick={() => (canGoBack ? router.history.back() : void router.navigate({ to: '/' }))}
-      className="absolute left-0 flex size-[35px] cursor-pointer items-center justify-center rounded-full border border-border bg-surface-raised"
-    >
-      <img src={arrowBack} alt="" width={13} height={7} className="rotate-90" />
-    </button>
-  )
-}
-
 type ProfileShellProps = {
   current: ProfileSection
   /** Botão "Sair" (composto pela rota com a feature auth). */
@@ -102,11 +87,7 @@ export function ProfileShell({ current, signOut, children }: ProfileShellProps) 
   const title = SECTION_TITLES[current]
   return (
     <Container className="flex flex-col gap-6 pt-[30px] md:pt-8 xl:flex-row xl:items-start xl:gap-7">
-      <div className="relative flex h-[35px] items-center justify-center md:hidden">
-        <BackButton />
-        <h1 className="text-title-sm leading-6 font-bold text-foreground">{title}</h1>
-      </div>
-      <h1 className="sr-only max-md:hidden">{title}</h1>
+      <PageHeading title={title} fallback={{ to: '/' }} />
 
       {/* Desktop: menu lateral fixo */}
       <nav aria-label="Meu perfil" className="hidden w-[310px] shrink-0 bg-surface-card pt-[18px] pb-[18px] xl:block">

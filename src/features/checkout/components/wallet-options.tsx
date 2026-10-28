@@ -1,6 +1,7 @@
 import { EllipsisVerticalIcon } from 'lucide-react'
 import { useId, useState } from 'react'
 import walletCoinbase from '@/assets/icons/wallet-coinbase.png'
+import { LiveMessage, type LiveFeedback } from '@/components/feedback/live-message'
 import { Badge } from '@/components/ui/badge'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
@@ -87,8 +88,8 @@ function WalletMenu({
 export function SavedWallets({ wallets, selectedId, onSelect, onSwitch, actions, onRemoved }: SavedWalletsProps) {
   const titleId = useId()
   const [toRemove, setToRemove] = useState<Wallet | null>(null)
-  const [feedback, setFeedback] = useState<{ message: string; error: boolean } | null>(null)
-  const announce = (message: string, error = false) => setFeedback({ message, error })
+  const [feedback, setFeedback] = useState<LiveFeedback>(null)
+  const announce = (message: string, error = false) => setFeedback({ tone: error ? 'error' : 'status', message })
 
   function confirmRemove() {
     const wallet = toRemove
@@ -153,9 +154,7 @@ export function SavedWallets({ wallets, selectedId, onSelect, onSwitch, actions,
           })}
         </RadioGroup>
       )}
-      <output aria-live="polite" className={cn('text-body leading-5 empty:hidden', feedback?.error ? 'text-destructive' : 'text-text-secondary')}>
-        {feedback?.message}
-      </output>
+      <LiveMessage as="output" feedback={feedback} className="text-body leading-5 empty:hidden" />
       <ConfirmDialog
         open={toRemove !== null}
         onOpenChange={(open) => !open && setToRemove(null)}
