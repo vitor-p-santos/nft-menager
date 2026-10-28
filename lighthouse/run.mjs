@@ -4,6 +4,12 @@ import { spawn, spawnSync } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
+// Sem Chrome instalado no sistema (CI/WSL): usa o Chromium baixado pelo Playwright
+if (!process.env.CHROME_PATH) {
+  const { chromium } = await import('@playwright/test')
+  process.env.CHROME_PATH = chromium.executablePath()
+}
+
 const RUNS = 3
 const PROFILES = ['mobile', 'desktop']
 const root = new URL('..', import.meta.url).pathname
@@ -27,7 +33,7 @@ try {
       const runs = []
       for (let i = 1; i <= RUNS; i++) {
         const slug = page === '/' ? 'home' : page.replace(/\W+/g, '-').replace(/^-|-$/g, '')
-        const file = join(outDir, `${slug}.${profile}.run${i}`)
+        const file = join(outDir, `${slug}-${profile}-run${i}`)
         const args = [
           'lighthouse', baseUrl + page,
           '--quiet', '--chrome-flags=--headless=new --no-sandbox',
@@ -35,7 +41,12 @@ try {
           '--output=json', '--output=html', `--output-path=${file}`,
         ]
         if (profile === 'desktop') args.push('--preset=desktop')
-        const res = spawnSync('npx', args, { cwd: root, stdio: 'inherit' })
+        // Até 3 tentativas: no WSL o Chrome às vezes fecha a conexão CDP no cleanup ("Connection closed")
+        let res
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          res = spawnSync('npx', args, { cwd: root, stdio: 'inherit' })
+          if (res.status === 0) break
+        }
         if (res.status !== 0) throw new Error(`Lighthouse falhou em ${page} (${profile}) run ${i}`)
         const lhr = JSON.parse(readFileSync(`${file}.report.json`, 'utf8'))
         runs.push({

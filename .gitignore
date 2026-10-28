@@ -30,3 +30,6 @@ reports/lighthouse/*.json
 !reports/lighthouse/summary.json
 playwright/.cache
 .env.local
+
+# Perfis temporários do Chrome criados pelo Lighthouse no WSL
+C:*
