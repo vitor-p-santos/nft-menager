@@ -3,8 +3,7 @@ import { useForm } from 'react-hook-form'
 import { cn } from '@/lib/utils'
 import { getAuthFormError, useRegister } from '../api'
 import { registerSchema, toRegisterRequest, type RegisterFormValues, type RegisterInput } from '../schemas/auth'
-import { AuthField, AuthFormError, type AuthVariant } from './auth-field'
-import { AuthSubmit } from './login-form'
+import { AuthField, AuthFormError, AuthSubmit, type AuthVariant } from './auth-field'
 
 /**
  * Formulário "Criar conta" (Figma Sign Up Modal `70383:239` e Mobile/Cadastro Form `70399:250`):

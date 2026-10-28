@@ -65,32 +65,27 @@ type InputFieldProps = Omit<ComponentProps<'input'>, 'id' | 'className'> &
 export function InputField({ label, hideLabel, required, error, hint, className, inputClassName, suffix, ...props }: InputFieldProps) {
   return (
     <FieldShell label={label} hideLabel={hideLabel} required={required} error={error} hint={hint} className={className}>
-      {({ id, describedBy, invalid }) =>
-        suffix ? (
-          <div className="relative">
-            <Input
-              id={id}
-              aria-invalid={invalid || undefined}
-              aria-describedby={describedBy}
-              aria-required={required || undefined}
-              className={cn('pr-14', inputClassName)}
-              {...props}
-            />
-            <span aria-hidden className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-body-lg text-foreground">
-              {suffix}
-            </span>
-          </div>
-        ) : (
+      {({ id, describedBy, invalid }) => {
+        const input = (
           <Input
             id={id}
             aria-invalid={invalid || undefined}
             aria-describedby={describedBy}
             aria-required={required || undefined}
-            className={inputClassName}
+            className={cn(suffix && 'pr-14', inputClassName)}
             {...props}
           />
         )
-      }
+        if (!suffix) return input
+        return (
+          <div className="relative">
+            {input}
+            <span aria-hidden className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-body-lg text-foreground">
+              {suffix}
+            </span>
+          </div>
+        )
+      }}
     </FieldShell>
   )
 }
@@ -147,6 +142,31 @@ export function TextareaField({ label, error, className, ...props }: TextareaFie
   )
 }
 
+type PasswordToggleProps = {
+  /** Rótulo do campo: o botão vira "Mostrar senha"/"Ocultar senha". */
+  label: string
+  visible: boolean
+  onToggle: () => void
+  className?: string
+  iconClassName?: string
+}
+
+/** Olho de mostrar/ocultar senha, posicionado à direita dentro do campo (`relative`). */
+export function PasswordToggle({ label, visible, onToggle, className, iconClassName }: PasswordToggleProps) {
+  const Icon = visible ? EyeIcon : EyeOffIcon
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-label={visible ? `Ocultar ${label.toLowerCase()}` : `Mostrar ${label.toLowerCase()}`}
+      aria-pressed={visible}
+      className={cn('absolute right-3 flex size-7 cursor-pointer items-center justify-center rounded-sm', className)}
+    >
+      <Icon aria-hidden className={iconClassName} />
+    </button>
+  )
+}
+
 type PasswordFieldProps = Omit<ComponentProps<'input'>, 'id' | 'className' | 'type'> &
   Pick<FieldShellProps, 'label' | 'required' | 'error' | 'className'>
 
@@ -169,15 +189,13 @@ export function PasswordField({ label, required, error, className, ...props }: P
             className="pr-12"
             {...props}
           />
-          <button
-            type="button"
-            onClick={() => setVisible((value) => !value)}
-            aria-label={visible ? `Ocultar ${label.toLowerCase()}` : `Mostrar ${label.toLowerCase()}`}
-            aria-pressed={visible}
-            className="absolute inset-y-0 right-3 my-auto flex size-7 cursor-pointer items-center justify-center rounded-sm text-secondary"
-          >
-            {visible ? <EyeIcon aria-hidden className="size-[18px]" /> : <EyeOffIcon aria-hidden className="size-[18px]" />}
-          </button>
+          <PasswordToggle
+            label={label}
+            visible={visible}
+            onToggle={() => setVisible((value) => !value)}
+            className="inset-y-0 my-auto text-secondary"
+            iconClassName="size-[18px]"
+          />
         </div>
       )}
     </FieldShell>
