@@ -6,7 +6,7 @@
 
 | Status | `code` comuns |
 |---|---|
-| 400/422 | `validation_error` (details = erros por campo), `idempotency_key_reused`, `coupon_invalid`, `coupon_expired`, `cart_empty` |
+| 400/422 | `validation_error` (details = erros por campo), `idempotency_key_reused`, `coupon_invalid`, `coupon_expired`, `cart_empty`, `mixed_networks` |
 | 401 | `unauthorized`, `session_expired`, `invalid_credentials` |
 | 404 | `not_found` |
 | 409 | `email_taken`, `username_taken`, `price_changed`, `out_of_stock`, `quote_expired`, `cart_version_mismatch` |
@@ -78,7 +78,7 @@ Regras do carrinho:
 ## Checkout e pedidos (autenticado)
 | Método | Rota | Corpo → Resposta | Cenário |
 |---|---|---|---|
-| POST | `/checkout/quote` | `{cartVersion}` → 200 `Quote` (com `changes[]`) \| 422 `cart_empty` \| 422 | `checkout.quote` |
+| POST | `/checkout/quote` | `{cartVersion}` → 200 `Quote` (com `changes[]`) \| 422 `cart_empty` \| 422 `mixed_networks` (`details.networks`, `details.changes`) \| 422 | `checkout.quote` |
 | POST | `/orders` | Header `Idempotency-Key`. `{quoteId,walletId,network,collector}` → 201 `Order(pending)` \| 200 (replay) \| 400 (sem chave) \| 409 `price_changed`/`out_of_stock`/`cart_version_mismatch`/`quote_expired` (`details.changes`) \| 422 `validation_error`/`idempotency_key_reused` | `checkout.create` |
 | GET | `/orders?status&page` | `{items:Order[],total,page,pageSize,totalPages,counts:{all,pending,confirmed,rejected}}` (10 por página, mais recente primeiro; `total`/`totalPages` do filtro, `counts` sem filtro) | `orders.list` |
 | GET | `/orders/:id` | `Order` \| 404 (inexistente ou de outro usuário) | `orders.detail` |
@@ -94,10 +94,10 @@ Schemas: `Quote`/`QuoteChange`/`CreateOrderInput`/`collectorSchema` em `src/feat
 - Se `changes` não estiver vazio, a UI mostra o diff e pede nova confirmação. Uma nova cotação deve enviar `quote.cartVersion`; ela volta com `changes: []`.
 
 **Pedido (`POST /orders`):**
-- `CreateOrderInput = {quoteId, walletId: string|null, network, collector}`. `walletId` = carteira salva (`GET /me/wallets`): a `network` e o `collector.walletAddress` precisam bater com ela (senão 422 em `network`/`collector.walletAddress`); `null` = carteira digitada no formulário. `network` = `collector.network` (a rede da carteira define a rede do pedido).
+- `CreateOrderInput = {quoteId, walletId: string|null, network, collector}`. `walletId` = carteira salva (`GET /me/wallets`): a `network` e o `collector.walletAddress` precisam bater com ela (senão 422 em `network`/`collector.walletAddress`); `null` = carteira digitada no formulário. `network` = `collector.network` (a rede da carteira define a rede do pedido) e tem de ser **a rede dos NFTs da cotação**: cada pedido é pago numa rede só (senão 422 `validation_error` em `network`). Carrinho com NFTs de redes diferentes não é cotado (422 `mixed_networks`): a compra é feita uma rede por vez.
 - `collector = {displayName, username, network, profileName, walletAddress, secondaryWallet?, walletProvider, referralCode?, email, ensName?, note?}` (D-08). Endereço: `0x` + 40 hex (Ethereum/Polygon) ou base58 (Solana). `ensName` sem sufixo ganha `.eth`. Opcionais vazios viram `null`. 422 → `details` = `{'collector.email': msg, …}`.
 - `Idempotency-Key` obrigatório (`[A-Za-z0-9_-]{8,128}`, o client usa UUID), único por usuário. Mesma chave + mesmo corpo → **200** com o pedido existente (estado atual). Mesma chave + outro corpo → **422 `idempotency_key_reused`**. A chave só fica vinculada quando o pedido é criado: respostas 4xx não consomem a chave.
-- Ordem das verificações: 401 → 400 (chave) → 422 (corpo) → replay/reuso da chave → cotação inválida (422 `quoteId`) / já usada ou vencida (409 `quote_expired`) → carteira (422) → `cart_version_mismatch` → `price_changed` → `out_of_stock` (409 com `details.changes`, mesmo formato da cotação).
+- Ordem das verificações: 401 → 400 (chave) → 422 (corpo) → replay/reuso da chave → cotação inválida (422 `quoteId`) / já usada ou vencida (409 `quote_expired`) → rede ≠ rede dos NFTs (422 `network`) → carteira (422) → `cart_version_mismatch` → `price_changed` → `out_of_stock` (409 com `details.changes`, mesmo formato da cotação).
 - Envios simultâneos com a mesma chave não criam dois pedidos (a verificação e a gravação são atômicas no handler). Uma cotação gera no máximo um pedido.
 - `Order = {id, idempotencyKey, quoteId, status, items: OrderItem[], coupon: {code,discountWei}|null, totals, wallet: WalletSnapshot, network, collector, txHash: string|null, rejectionCode: 'payment_declined'|'out_of_stock'|null, rejectionReason: string|null, createdAt, updatedAt, version}`. `OrderItem = {id, nftId, edition, quantity, unitPriceWei, lineTotalWei, nft:{id,slug,name,tokenId,collection,network,image}}`. `WalletSnapshot = {walletId|null, label|null, provider, network, address, ensName|null}`.
 - `Receipt = {orderId, issuedAt, snapshot: Order}`: gravado uma vez na confirmação e nunca reescrito. O `snapshot` é a cópia do pedido no momento da confirmação (preço pago, carteira, totais, `txHash`) e não é recalculado a partir do catálogo: mudar preço ou estoque do NFT depois não altera o recibo. Não existe rota de escrita para recibos (405).

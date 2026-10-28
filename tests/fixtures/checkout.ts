@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test'
 import { expect } from './app'
-import { ANA, submitLogin } from './auth'
+import { ANA, expectLoginFor, submitLogin } from './auth'
 import { buyFromDetail } from './cart'
 
 export const confirmButton = (page: Page) => page.getByRole('button', { name: /^(Confirmar compra|Processando…)$/ })
@@ -14,15 +14,13 @@ export async function setScenarios(page: Page, map: Record<string, string>) {
 }
 
 /**
- * Visitante põe o NFT no carrinho, abre /checkout (rota privada → /entrar?redirect=/checkout),
+ * Visitante põe o NFT no carrinho, abre /checkout (rota privada → login com redirect=/checkout),
  * entra como Ana (carrinho anônimo mesclado) e volta ao pagamento com a cotação carregada.
  */
 export async function openCheckoutAsAna(page: Page, nftId: string) {
   await buyFromDetail(page, nftId)
   await page.goto('/checkout')
-  await expect(page).toHaveURL(/\/entrar\?/)
-  expect(new URL(page.url()).searchParams.get('redirect')).toBe('/checkout')
-  await submitLogin(page.getByRole('main'), ANA)
+  await submitLogin(await expectLoginFor(page, '/checkout'), ANA)
   await expect(page).toHaveURL(/\/checkout$/)
   await expect(confirmButton(page)).toBeEnabled({ timeout: 15_000 })
 }

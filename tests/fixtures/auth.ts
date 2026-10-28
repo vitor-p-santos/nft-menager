@@ -5,7 +5,7 @@ import { expect } from './app'
 export const ANA = { email: 'ana@kurio.dev', password: 'Senha@123', name: 'Ana Ribeiro' }
 export const BRUNO = { email: 'bruno@kurio.dev', password: 'Senha@123', name: 'Bruno Lima' }
 
-/** Abaixo de `md` (768px) as telas de auth são páginas (/entrar, /cadastro); a partir dele, modal. */
+/** Abaixo de `md` (768px) as telas de auth são páginas (/entrar, /cadastro); a partir dele, viram o modal. */
 export const isMobile = (testInfo: TestInfo) => testInfo.project.name === 'mobile-390'
 
 /**
@@ -41,11 +41,26 @@ export async function logout(page: Page, user: { name: string }) {
   await expect(accountMenu(page, user)).toHaveCount(0)
 }
 
-/** Rota privada: sem sessão vai para /entrar?redirect=<rota>; o login (página) volta para ela. */
+/**
+ * Login pedido por uma rota privada (`path`): abaixo de `md` é a página `/entrar?redirect=<path>`; a
+ * partir dele, o modal sobre o mercado (a página `/entrar` vira o modal, com o mesmo `redirect`).
+ * Devolve o container do formulário.
+ */
+export async function expectLoginFor(page: Page, path: string) {
+  if ((page.viewportSize()?.width ?? 0) < 768) {
+    await expect(page).toHaveURL(/\/entrar\?/, { timeout: 15_000 })
+    expect(new URL(page.url()).searchParams.get('redirect')).toBe(path)
+    return page.getByRole('main')
+  }
+  const dialog = page.getByRole('dialog', { name: 'Entrar na Kurio' })
+  await expect(dialog).toBeVisible({ timeout: 15_000 })
+  await expect(page).toHaveURL((url) => url.pathname === '/')
+  return dialog
+}
+
+/** Rota privada: sem sessão pede login (página ou modal, ver `expectLoginFor`) e volta para ela. */
 export async function openPrivateAs(page: Page, path: string, user: { email: string; password: string }) {
   await page.goto(path)
-  await expect(page).toHaveURL(/\/entrar\?/, { timeout: 15_000 })
-  expect(new URL(page.url()).searchParams.get('redirect')).toBe(path)
-  await submitLogin(page.getByRole('main'), user)
+  await submitLogin(await expectLoginFor(page, path), user)
   await expect(page).toHaveURL((url) => url.pathname + url.search === path, { timeout: 15_000 })
 }

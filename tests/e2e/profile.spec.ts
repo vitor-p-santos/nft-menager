@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test'
 import { expect, test } from '../fixtures/app'
-import { accountMenu, ANA, BRUNO, logout, openPrivateAs, submitLogin } from '../fixtures/auth'
+import { accountMenu, ANA, BRUNO, expectLoginFor, logout, openPrivateAs, submitLogin } from '../fixtures/auth'
 
 /*
  * Fase 7 (T-088), escopo enxuto. Perfil, senha, avatar e carteiras são regras de formulário/API:
@@ -87,10 +87,10 @@ test('senha: erros nos campos, troca com sucesso e login só com a nova', async 
   // Sai e volta: a senha antiga é recusada, a nova entra
   await logout(page, ANA)
   await page.goto('/perfil')
-  await expect(page).toHaveURL(/\/entrar\?/, { timeout: 15_000 })
-  await submitLogin(page.getByRole('main'), ANA)
-  await expect(page.getByRole('main').getByRole('alert')).toHaveText('E-mail ou senha incorretos.')
-  await submitLogin(page.getByRole('main'), { email: ANA.email, password: NEW_PASSWORD })
+  const login = await expectLoginFor(page, '/perfil')
+  await submitLogin(login, ANA)
+  await expect(login.getByRole('alert')).toHaveText('E-mail ou senha incorretos.')
+  await submitLogin(login, { email: ANA.email, password: NEW_PASSWORD })
   await expect(page).toHaveURL((url) => url.pathname.startsWith('/perfil'), { timeout: 15_000 })
   await expect(accountMenu(page, ANA)).toBeVisible()
 })

@@ -10,15 +10,16 @@ import { Container } from '@/components/layout/container'
 import { Breadcrumbs, PageHeading } from '@/components/layout/page-heading'
 import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'
-import { cartQueries } from '@/entities/cart'
+import { cartNetworks, cartQueries } from '@/entities/cart'
 import { CATALOG_SECTION_ID } from '@/entities/catalog'
 import { ExploreLink } from '@/entities/catalog/explore-link'
 import { useCurrentUser, type User } from '@/entities/session'
+import type { Network } from '@/entities/nft'
 import { stripEthSuffix, walletQueries, type Wallet, type WalletProvider } from '@/entities/wallet'
 import { cn } from '@/lib/utils'
 import { useCheckoutFlow, type CheckoutFlow } from '../hooks/use-checkout-flow'
 import { useCollectorWallet } from '../hooks/use-collector-wallet'
-import { collectorDefaults, collectorSchema, type CollectorFormValues, type CollectorInput } from '../schemas/checkout'
+import { collectorDefaults, collectorSchema, collectorSchemaFor, type CollectorFormValues, type CollectorInput } from '../schemas/checkout'
 import { CollectorFields, type CollectorForm } from './collector-form'
 import { OrderItems, OrderReviewSkeleton, OrderTotals } from './order-review'
 import { OrderStatusDialog } from './order-status-dialog'
@@ -43,14 +44,15 @@ function Heading() {
   )
 }
 
-function initialValues(user: User, wallet: Wallet | null): CollectorFormValues {
+function initialValues(user: User, wallet: Wallet | null, network: Network | null): CollectorFormValues {
   const values = collectorDefaults(user, wallet)
   return {
     ...values,
     ensName: stripEthSuffix(values.ensName),
     // Select nativo controlado por RHF: sem valor, '' mantém o placeholder visível (senão o navegador
-    // mostra a primeira opção, que não está no formulário); o schema acusa o campo vazio.
-    network: values.network ?? ('' as CollectorFormValues['network']),
+    // mostra a primeira opção, que não está no formulário); o schema acusa o campo vazio. Sem carteira
+    // salva da rede dos NFTs, a carteira digitada já começa nessa rede.
+    network: values.network ?? network ?? ('' as CollectorFormValues['network']),
     walletProvider: values.walletProvider ?? ('' as CollectorFormValues['walletProvider']),
   }
 }
@@ -58,6 +60,8 @@ function initialValues(user: User, wallet: Wallet | null): CollectorFormValues {
 type CheckoutFormProps = {
   user: User
   wallets: Wallet[]
+  /** Rede dos NFTs do pedido (cada pedido usa uma rede só); `null` enquanto o carrinho não diz. */
+  network: Network | null
   flow: CheckoutFlow
   walletActions?: WalletMenuActions
 }
@@ -67,17 +71,19 @@ type CheckoutFormProps = {
  * à direita; no mobile, carteiras salvas + provedores, com os dados do colecionador recolhidos
  * (vêm do perfil) e abertos em "Trocar carteira" ou quando algo precisa ser corrigido.
  */
-function CheckoutForm({ user, wallets, flow, walletActions }: CheckoutFormProps) {
+function CheckoutForm({ user, wallets, network, flow, walletActions }: CheckoutFormProps) {
   const primary = wallets.find((w) => w.role === 'primary') ?? wallets[0] ?? null
-  const [detailsOpen, setDetailsOpen] = useState(primary === null)
+  // Começa pela principal se ela for da rede dos NFTs; senão, pela primeira salva dessa rede
+  const initialWallet = [primary, ...wallets].find((w) => w && (!network || w.network === network)) ?? null
+  const [detailsOpen, setDetailsOpen] = useState(initialWallet === null)
   const detailsId = useId()
   const form: CollectorForm = useForm<CollectorFormValues, unknown, CollectorInput>({
-    resolver: zodResolver(collectorSchema),
-    defaultValues: initialValues(user, primary),
+    resolver: zodResolver(network ? collectorSchemaFor(network) : collectorSchema),
+    defaultValues: initialValues(user, initialWallet, network),
     mode: 'onTouched',
   })
   const { setValue, handleSubmit, setFocus } = form
-  const { selectedWalletId, selectWallet, toggleOtherWallet, walletRemoved, savedWalletIdFor } = useCollectorWallet(form, wallets, primary)
+  const { selectedWalletId, selectWallet, toggleOtherWallet, walletRemoved, savedWalletIdFor } = useCollectorWallet(form, wallets, initialWallet)
   const provider = useWatch({ control: form.control, name: 'walletProvider' }) as WalletProvider | undefined
   const busy = flow.isSubmitting
 
@@ -273,8 +279,16 @@ export function CheckoutPage({ walletActions }: { walletActions?: WalletMenuActi
         action={<ExploreLink />}
       />
     )
-  } else if (user && wallets.data) {
-    content = <CheckoutForm user={user} wallets={wallets.data} flow={flow} walletActions={walletActions} />
+  } else if (user && wallets.data && cart.data) {
+    content = (
+      <CheckoutForm
+        user={user}
+        wallets={wallets.data}
+        network={cartNetworks(cart.data.items)[0] ?? null}
+        flow={flow}
+        walletActions={walletActions}
+      />
+    )
   } else {
     content = <CheckoutSkeleton />
   }

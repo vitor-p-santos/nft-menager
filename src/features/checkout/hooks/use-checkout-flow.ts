@@ -38,6 +38,11 @@ export type CheckoutFlow = {
 }
 
 /** Mensagem acessível para a falha ao criar o pedido (o carrinho nunca é alterado aqui). */
+const QUOTE_BLOCKED_TITLES: Record<string, string | undefined> = {
+  cart_empty: 'Nada para comprar',
+  mixed_networks: 'Finalize uma rede por vez',
+}
+
 function submitErrorMessage(error: unknown): string {
   if (!(error instanceof ApiError)) return 'Não foi possível concluir a compra. Tente novamente.'
   switch (error.kind) {
@@ -102,16 +107,13 @@ export function useCheckoutFlow(cart: Cart | undefined): CheckoutFlow {
           setInitialChanges(next.changes)
         },
         onError: (cause) => {
-          const empty = cause instanceof ApiError && cause.code === 'cart_empty'
-          setQuoteError(
-            empty
-              ? { title: 'Nada para comprar', description: cause.message, retry: false }
-              : {
-                  title: 'Não foi possível revisar o pedido',
-                  description: 'Verifique sua conexão e tente novamente.',
-                  retry: true,
-                },
-          )
+          // Sem como cotar (carrinho vazio ou NFTs de redes diferentes): o caminho é voltar ao carrinho
+          const blocked = cause instanceof ApiError ? QUOTE_BLOCKED_TITLES[cause.code] : undefined
+          if (blocked) {
+            setQuoteError({ title: blocked, description: cause.message, retry: false })
+            return
+          }
+          setQuoteError({ title: 'Não foi possível revisar o pedido', description: 'Verifique sua conexão e tente novamente.', retry: true })
         },
       },
     )

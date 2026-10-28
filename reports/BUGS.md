@@ -1,6 +1,6 @@
 # Bugs conhecidos
 
-Levantados em 2026-10-28 por uma caça de bugs no site publicado (<https://nft-marketplace-ten-weld.vercel.app>, `main` em `dedf401`). O teste usou um navegador real (Playwright/Chromium), com axe injetado e leitura do código. **Nenhum foi corrigido ainda.** Os arquivos e linhas se referem à `main` daquele momento. A refatoração da PR #11 mudou de lugar parte do código dos mocks (`handlers/checkout.ts` → `mocks/domain/*`).
+Levantados em 2026-10-28 por uma caça de bugs no site publicado (<https://nft-marketplace-ten-weld.vercel.app>, `main` em `dedf401`). O teste usou um navegador real (Playwright/Chromium), com axe injetado e leitura do código. Corrigidos até agora: item 1. Os arquivos e linhas se referem à `main` daquele momento. A refatoração da PR #11 mudou de lugar parte do código dos mocks (`handlers/checkout.ts` → `mocks/domain/*`).
 
 Usuários de teste: `ana@kurio.dev` e `bruno@kurio.dev`, senha `Senha@123`. Os cenários do MSW são configurados com `?mock=<chave>:<valor>` ou `localStorage['mock:scenarios']` (ver `src/mocks/scenarios/index.ts`).
 
@@ -8,7 +8,9 @@ Legenda: **R** = reproduzido no navegador · **S** = suspeito pela leitura do c�
 
 ## Alto
 
-### 1. A rede do pedido não é validada contra a rede dos NFTs (R)
+### 1. ~~A rede do pedido não é validada contra a rede dos NFTs~~ — CORRIGIDO (PR `rede-do-pedido`)
+> Corrigido com a opção (a): uma rede por compra. O carrinho com redes misturadas bloqueia o "Finalizar", a cotação responde 422 `mixed_networks` e `POST /orders` responde 422 em `network`. Coberto por `tests/e2e/order-network.spec.ts`.
+
 - **Passos:**
   - **A:** Bruno (sem carteiras) põe *Copper Ape #291* (Ethereum) no carrinho e vai a `/checkout`. Escolhe Rede = Solana, endereço `9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin`, tipo MetaMask, e confirma.
   - **B (390 px):** Ana escolhe a carteira salva "Reserva" (Polygon) para comprar *Copper Ape* (Ethereum).
