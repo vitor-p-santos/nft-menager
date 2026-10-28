@@ -191,11 +191,12 @@ export function SiteFooter() {
           </div>
         </div>
 
-        {/* Figma: uma linha só, centrada na vertical, com sobra à direita do telefone. Abaixo do xl não há
-            colunas de links para alinhar, então os itens ficam na largura natural (antes o contato quebrava) */}
-        <div className="flex flex-wrap items-center gap-x-8 gap-y-4 bg-surface-dark p-8 lg:gap-x-16 xl:grid xl:h-[88px] xl:grid-cols-[1fr_1fr_1fr_228px] xl:gap-[92px]">
+        {/* Figma: uma linha só, 88px, itens centrados na vertical. O xl deste projeto é 1440: abaixo dele (notebooks
+            de 1280/1366) a grade de 4 colunas com gap-8 alinha KURIO e o e-mail às 2 colunas de links de baixo.
+            No tablet (md) os itens ficam na largura natural; py-[22px] = (88 − 44) / 2 do texto de 2 linhas */}
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-4 bg-surface-dark px-8 py-[22px] lg:grid lg:h-[88px] lg:grid-cols-4 lg:py-0 xl:grid-cols-[1fr_1fr_1fr_228px] xl:gap-[92px]">
           <span className="text-body font-bold tracking-[0.1em] text-foreground">KURIO</span>
-          <p className="text-body leading-[22px] text-foreground">
+          <p className="text-body leading-[22px] whitespace-nowrap text-foreground">
             Feito para colecionadores,
             <br />
             criadores e cultura

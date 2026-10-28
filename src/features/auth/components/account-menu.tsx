@@ -55,7 +55,10 @@ type AccountMenuProps = {
  */
 export function AccountMenu({ user, placement, trigger, triggerClassName }: AccountMenuProps) {
   const logout = useLogout()
-  const label = `Conta de ${user.displayName || user.username}`
+  // WCAG 2.5.3: no header, sem foto, o gatilho mostra as iniciais; o nome acessível precisa contê-las
+  // (fora de parênteses: o axe descarta texto entre parênteses ao comparar)
+  const showsInitials = placement === 'header' && !user.avatarUrl
+  const label = `Conta de ${user.displayName || user.username}${showsInitials ? `, ${initials(user)}` : ''}`
 
   return (
     <DropdownMenu>

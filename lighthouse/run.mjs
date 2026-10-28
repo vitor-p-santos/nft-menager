@@ -1,7 +1,7 @@
 // Executa o Lighthouse 3x por página e perfil (mobile/desktop) e registra as medianas.
 // Uso: npm run lighthouse  (requer `npm run build`; sobe o vite preview automaticamente)
 import { spawn, spawnSync } from 'node:child_process'
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 // Sem Chrome instalado no sistema (CI/WSL): usa o Chromium baixado pelo Playwright
@@ -11,6 +11,8 @@ if (!process.env.CHROME_PATH) {
 }
 
 const RUNS = 3
+/** Orçamento de CLS por página × perfil (mediana): 0,1 é o limite de "bom" do Core Web Vitals. */
+const CLS_BUDGET = 0.1
 const PROFILES = ['mobile', 'desktop']
 const root = new URL('..', import.meta.url).pathname
 const { baseUrl, pages } = JSON.parse(readFileSync(join(root, 'lighthouse/pages.json'), 'utf8'))
@@ -80,5 +82,15 @@ const md = [
   '|---|---|---|---|---|---|',
   ...summary.map((s) => `| ${s.page} | ${s.profile} | ${s.median.performance} | ${s.median.lcpMs} | ${s.median.cls} | ${s.median.tbtMs} |`),
 ].join('\n')
-writeFileSync(join(outDir, 'SUMMARY.md'), md + '\n')
+// A análise escrita à mão (a partir de "## Análise") sobrevive à regravação da tabela
+const summaryPath = join(outDir, 'SUMMARY.md')
+const previous = existsSync(summaryPath) ? readFileSync(summaryPath, 'utf8') : ''
+const analysis = previous.indexOf('\n## Análise')
+writeFileSync(summaryPath, md + '\n' + (analysis >= 0 ? previous.slice(analysis) : ''))
 console.log('\n' + md)
+
+const overBudget = summary.filter((s) => s.median.cls > CLS_BUDGET)
+if (overBudget.length > 0) {
+  console.error(`\nCLS acima de ${CLS_BUDGET}: ${overBudget.map((s) => `${s.page} (${s.profile}) = ${s.median.cls}`).join(', ')}`)
+  process.exit(1)
+}

@@ -1,6 +1,5 @@
-import type { Page } from '@playwright/test'
 import { expect, test } from '../fixtures/app'
-import { ANA, submitLogin } from '../fixtures/auth'
+import { ANA, openPrivateAs } from '../fixtures/auth'
 import { apiRequest } from '../fixtures/checkout'
 
 /*
@@ -12,19 +11,10 @@ import { apiRequest } from '../fixtures/checkout'
 
 const order = (n: number) => `ord_fixture-ana-${String(n).padStart(4, '0')}`
 
-/** Rota privada: sem sessão vai para /entrar?redirect=<rota>; o login volta para ela. */
-async function openAsAna(page: Page, path: string) {
-  await page.goto(path)
-  await expect(page).toHaveURL(/\/entrar\?/)
-  expect(new URL(page.url()).searchParams.get('redirect')).toBe(path)
-  await submitLogin(page.getByRole('main'), ANA)
-  await expect(page).toHaveURL((url) => url.pathname + url.search === path)
-}
-
 test('estados do pedido e recibo imutável', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop-1440', 'Regra da API: um viewport basta')
   test.slow()
-  await openAsAna(page, `/pedidos/${order(1)}`)
+  await openPrivateAs(page, `/pedidos/${order(1)}`, ANA)
 
   // Confirmado: recibo (snapshot gravado na confirmação)
   const receipt = page.getByRole('region', { name: 'Seus NFTs agora estão na sua carteira' })
@@ -64,7 +54,7 @@ test('atividade: lista, filtro por estado na URL e link para o pedido', async ({
   test.skip(testInfo.project.name === 'tablet-768', 'Mesmos cards do mobile')
   test.slow()
   const desktop = testInfo.project.name === 'desktop-1440'
-  await openAsAna(page, '/atividade')
+  await openPrivateAs(page, '/atividade', ANA)
 
   // 12 pedidos, 10 por página: tabela (desktop) ou cards
   const rows = desktop

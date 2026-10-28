@@ -6,11 +6,16 @@
 
 > **Atualização 2026-10-27 (rodada final, branch `ajustes-finais`).** Itens do resumo abaixo já resolvidos:
 > **#2/#3** Lighthouse medido em `/`, detalhe e carrinho × mobile/desktop (`reports/lighthouse/SUMMARY.md`; CLS 0 em todas);
-> **#5** relatório Playwright da suíte completa versionado (`reports/playwright`, 54 passed / 0 failed / 27 skipped);
+> **#5** relatório Playwright da suíte completa versionado (`reports/playwright`, 69 passed / 0 failed / 42 skipped);
 > **#8** baselines "pagamento" (390) e "início" (768) regeneradas e passando; **#9** tela "Lista de interesse"
 > (`/perfil/lista-de-interesse`) implementada; **#11** imagens e bundle medidos; **#12** repositório versionado
-> (PRs #1–#10). Continuam em aberto: **#1** deploy, **#4** Lighthouse em CI, **#6** e2e do tempo real (T-095),
-> **#7** e2e de perfil/carteiras (T-088), **#10** axe nas telas novas, **#13** shadcn restantes (T-021).
+> (PRs #1–#10); **#6** e2e do tempo real (`tests/e2e/realtime.spec.ts`: `nft.updated` na tela, duplicado,
+> evento antigo, desconexão/reconexão com refetch e `order.updated` antes do polling); **#7** e2e de perfil,
+> senha, avatar e carteiras (`tests/e2e/profile.spec.ts`); **#10** axe em checkout, pedido, atividade, perfil,
+> carteiras e lista de interesse (`tests/a11y/account.spec.ts`, 3 viewports), que achou e levou à correção do
+> nome acessível do menu da conta (WCAG 2.5.3); **#13** Input, Select, Checkbox, RadioGroup e Badge (T-021);
+> **#4** CI em `.github/workflows/ci.yml` (check, Playwright e Lighthouse com orçamento de CLS ≤ 0,1).
+> Continua em aberto apenas: **#1** deploy público (depende do login na Vercel).
 
 Legenda: **OK** = implementado e coberto por teste ou verificação registrada · **Parcial** = implementado sem teste automatizado, ou com uma parte faltando · **Faltando** = não existe.
 

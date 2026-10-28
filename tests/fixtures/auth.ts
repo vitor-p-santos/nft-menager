@@ -40,3 +40,12 @@ export async function logout(page: Page, user: { name: string }) {
   await page.getByRole('menuitem', { name: 'Sair' }).click()
   await expect(accountMenu(page, user)).toHaveCount(0)
 }
+
+/** Rota privada: sem sessão vai para /entrar?redirect=<rota>; o login (página) volta para ela. */
+export async function openPrivateAs(page: Page, path: string, user: { email: string; password: string }) {
+  await page.goto(path)
+  await expect(page).toHaveURL(/\/entrar\?/, { timeout: 15_000 })
+  expect(new URL(page.url()).searchParams.get('redirect')).toBe(path)
+  await submitLogin(page.getByRole('main'), user)
+  await expect(page).toHaveURL((url) => url.pathname + url.search === path, { timeout: 15_000 })
+}

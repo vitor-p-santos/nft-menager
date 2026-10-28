@@ -224,11 +224,14 @@ Os ciclos de import são barrados pelo lint (`import/no-cycle`).
 | R-6 | Não há backend real: cada navegador tem o próprio banco (`localStorage`) e cada aba o próprio MSW | Banco versionado (`SCHEMA_VERSION`); eventos repassados entre abas por `BroadcastChannel`; o servidor simulado deriva o usuário do token |
 | R-7 | Pagamento e carteiras são simulados (sem MetaMask/WalletConnect/Coinbase reais) | O resultado do pagamento sai do mock (`payment.outcome`); o `txHash` é gerado e o link do explorador aponta para um hash inexistente |
 
+## Testes, auditorias e CI (Fase 9)
+- **Playwright** contra o build de produção (MSW ativo) em 390/768/1440: e2e por fluxo (`tests/e2e`), axe (`tests/a11y`: WCAG 2.1 AA, barra `serious`/`critical`) e baselines visuais (`tests/visual`). Tempo real é testado pelos gatilhos do servidor simulado (`window.__mockRealtime`, contrato repetido em `tests/fixtures/realtime.ts`). Última rodada: 69 passed / 0 failed / 42 skipped (os skips são por viewport).
+- **Lighthouse** (`npm run lighthouse`): 3 execuções × `/`, detalhe e carrinho × mobile/desktop; medianas em `reports/lighthouse/SUMMARY.md`. O script falha se a mediana de CLS passar de 0,1 e preserva a seção "Análise" ao regravar a tabela.
+- **CI** (`.github/workflows/ci.yml`): `check` → Playwright e Lighthouse em paralelo, com os relatórios como artefatos.
+- **Menu da conta (WCAG 2.5.3):** sem foto, o gatilho do header mostra as iniciais; o nome acessível passa a contê-las ("Conta de Ana Ribeiro, AR"). Vírgula e não parênteses: o axe descarta o texto entre parênteses na comparação.
+- **Footer:** a faixa KURIO/contato tem 88 px e itens centrados em todas as larguras. Como o `xl` do projeto é 1440, de 1024 a 1439 ela usa 4 colunas com `gap-8`, alinhando KURIO e o e-mail às 2 colunas de links de baixo.
+
 ## Pendências na entrega
 Levantadas na revisão final (T-105); detalhes e evidências em [`reports/REQUIREMENTS.md`](reports/REQUIREMENTS.md).
-- Deploy público (T-104) e URL no README.
-- Relatório Lighthouse (T-102). O `lighthouse/pages.json` só audita `/`, e não há execução em CI.
-- Relatório do Playwright atualizado para a entrega (T-103). Hoje o `.gitignore` ignora `reports/playwright`.
-- Testes e2e do tempo real (T-095) e de perfil/carteiras (T-088).
-- Tela de "Lista de interesse" (favoritos) e "Minha coleção": continuam "Disponível em breve" no menu do perfil, na tab bar e no rodapé.
-- Auditoria axe em checkout, pedido, atividade, perfil e carteiras.
+- Deploy público (T-104) e URL no README: depende do login na Vercel.
+- "Minha coleção" continua "Disponível em breve" (fora do spec).
