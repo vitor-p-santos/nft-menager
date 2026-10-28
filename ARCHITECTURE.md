@@ -229,7 +229,7 @@ Os ciclos de import são barrados pelo lint (`import/no-cycle`).
 - **Lighthouse** (`npm run lighthouse`): 3 execuções × `/`, detalhe e carrinho × mobile/desktop; medianas em `reports/lighthouse/SUMMARY.md`. O script falha se a mediana de CLS passar de 0,1 e preserva a seção "Análise" ao regravar a tabela.
 - **CI** (`.github/workflows/ci.yml`): `check` → Playwright e Lighthouse em paralelo, com os relatórios como artefatos.
 - **Menu da conta (WCAG 2.5.3):** sem foto, o gatilho do header mostra as iniciais; o nome acessível passa a contê-las ("Conta de Ana Ribeiro, AR"). Vírgula e não parênteses: o axe descarta o texto entre parênteses na comparação.
-- **Footer:** a faixa KURIO/contato tem 88 px e itens centrados em todas as larguras. Como o `xl` do projeto é 1440, de 1024 a 1439 ela usa 4 colunas com `gap-8`, alinhando KURIO e o e-mail às 2 colunas de links de baixo.
+- **Footer:** o layout desktop do Figma começa em **1280** (breakpoint `laptop`, 80rem, em `globals.css`), e não no `xl` de 1440: em 1280 o container já tem os 1200 px do Figma, e só as margens laterais mudam. A faixa KURIO/contato tem 88 px e itens centrados em todas as larguras; de 1024 a 1279 ela usa 4 colunas com `gap-8`, alinhando KURIO e o e-mail às 2 colunas de links de baixo.
 
 ## Pendências na entrega
 Levantadas na revisão final (T-105); detalhes e evidências em [`reports/REQUIREMENTS.md`](reports/REQUIREMENTS.md).
