@@ -1,12 +1,14 @@
 import { http, HttpResponse } from 'msw'
 import { CATALOG_PAGE_SIZE, CATALOG_SORTS, CATALOG_TABS, type CatalogSort, type CatalogTab } from '@/entities/catalog'
-import { NETWORK_LABELS, networkSchema, type Network, type Nft, type NftSummary } from '@/entities/nft'
+import { NETWORK_LABELS, networkSchema, type Network, type Nft } from '@/entities/nft'
 import { API_BASE_URL } from '@/lib/api'
 import { compareWei, parseEth } from '@/lib/money'
 import { REVIEWS_PAGE_SIZE } from '@/features/nft/schemas/review'
 import { nftsTable } from '../db/catalog'
 import { reviewsTable } from '../db/reviews'
+import { toSummary } from '../domain/catalog'
 import { CATEGORIES, CREATORS } from '../fixtures/categories'
+import { notFound } from '../http'
 import { withScenario } from '../scenarios'
 
 const NEW_WINDOW_MS = 14 * 86_400_000
@@ -40,10 +42,8 @@ function parseEthParam(value: string | null): bigint | undefined {
   }
 }
 
-export function toSummary(nft: Nft): NftSummary {
-  const { id, slug, name, tokenId, collection, creator, categoryId, network, priceWei, compareAtPriceWei, rarity, image, listedAt, version } = nft
-  return { id, slug, name, tokenId, collection, creator, categoryId, network, priceWei, compareAtPriceWei, rarity, image, listedAt, version }
-}
+/** Reexportado para `handlers/content.ts`, que ainda importa daqui. */
+export { toSummary }
 
 /** Aplica os filtros; `skip` ignora uma dimensão (facets contam com os demais filtros aplicados). */
 function matches(nft: Nft, f: Filters, skip?: 'categories' | 'networks' | 'creator', now = Date.now()) {
@@ -80,6 +80,8 @@ function sortNfts(nfts: Nft[], sort: CatalogSort) {
     }
   })
 }
+
+const nftNotFound = () => notFound('NFT não encontrado')
 
 export const catalogHandlers = [
   http.get(
@@ -130,7 +132,7 @@ export const catalogHandlers = [
     `${API_BASE_URL}/nfts/:id`,
     withScenario('catalog.detail', ({ params }) => {
       const nft = nftsTable.find(String(params.id))
-      if (!nft) return HttpResponse.json({ code: 'not_found', message: 'NFT não encontrado' }, { status: 404 })
+      if (!nft) return nftNotFound()
       return HttpResponse.json(nft)
     }),
   ),
@@ -139,7 +141,7 @@ export const catalogHandlers = [
     `${API_BASE_URL}/nfts/:id/related`,
     withScenario('catalog.related', ({ params }) => {
       const nft = nftsTable.find(String(params.id))
-      if (!nft) return HttpResponse.json({ code: 'not_found', message: 'NFT não encontrado' }, { status: 404 })
+      if (!nft) return nftNotFound()
       const related = nftsTable
         .all()
         .filter((n) => n.id !== nft.id && n.collection === nft.collection)
@@ -154,7 +156,7 @@ export const catalogHandlers = [
     `${API_BASE_URL}/nfts/:id/reviews`,
     withScenario('catalog.reviews', ({ request, params }) => {
       const nft = nftsTable.find(String(params.id))
-      if (!nft) return HttpResponse.json({ code: 'not_found', message: 'NFT não encontrado' }, { status: 404 })
+      if (!nft) return nftNotFound()
       const search = new URL(request.url).searchParams
       const pageSize = Math.min(Math.max(Number(search.get('pageSize')) || REVIEWS_PAGE_SIZE, 1), 50)
       const page = Math.max(Number(search.get('page')) || 1, 1)

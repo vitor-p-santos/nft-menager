@@ -1,5 +1,6 @@
-import { delay, HttpResponse, type HttpResponseResolver } from 'msw'
+import { delay, type HttpResponseResolver } from 'msw'
 import { API_TIMEOUT_MS } from '@/lib/api'
+import { apiError } from '../http'
 
 /**
  * Cenários reproduzíveis por endpoint. Configurados via localStorage
@@ -79,8 +80,6 @@ export function setScenarios(map: Record<string, string>) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(map))
 }
 
-const errorBody = (code: string, message: string) => ({ code, message })
-
 export type ScenarioOptions = {
   /**
    * O handler modela o `conflict` com uma regra real (ex.: o checkout altera o preço no banco e a
@@ -117,15 +116,15 @@ export function withScenario(key: string, resolver: HttpResponseResolver, option
         return response
       }
       case 'failure':
-        return HttpResponse.json(errorBody('internal_error', 'Erro interno simulado'), { status: 500 })
+        return apiError(500, 'internal_error', 'Erro interno simulado')
       case 'unavailable':
-        return HttpResponse.json(errorBody('service_unavailable', 'Serviço indisponível'), { status: 503 })
+        return apiError(503, 'service_unavailable', 'Serviço indisponível')
       case 'conflict':
         if (options.handlesConflict) {
           await delay()
           return resolver(info)
         }
-        return HttpResponse.json(errorBody('conflict', 'Conflito simulado'), { status: 409 })
+        return apiError(409, 'conflict', 'Conflito simulado')
       case 'success':
         await delay()
         return resolver(info)

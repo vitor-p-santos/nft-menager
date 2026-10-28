@@ -2,16 +2,12 @@ import { http, HttpResponse } from 'msw'
 import type { Wallet } from '@/entities/wallet'
 import { createWalletRequestSchema, MAX_WALLETS, walletInputSchema } from '@/features/profile/schemas'
 import { API_BASE_URL } from '@/lib/api'
-import { authenticate } from '../db/session'
 import { walletsTable } from '../db/wallets'
+import { apiError, invalidBody, isJsonObject, notFound, readJson, validationError } from '../http'
 import { withScenario } from '../scenarios'
-import { apiError, readJson, validationError } from './http-utils'
+import { withAuth } from '../with-auth'
 
-const isObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value)
-
-const badBody = () => apiError(400, 'validation_error', 'Corpo da requisição inválido')
-const notFound = () => apiError(404, 'not_found', 'Carteira não encontrada')
+const walletNotFound = () => notFound('Carteira não encontrada')
 const duplicate = () =>
   apiError(409, 'wallet_exists', 'Esta carteira já está salva nesta rede', {
     field: 'address',
@@ -35,68 +31,71 @@ function toInput(wallet: Wallet) {
 export const walletsHandlers = [
   http.get(
     `${API_BASE_URL}/me/wallets`,
-    withScenario('wallets.list', ({ request }) => {
-      const auth = authenticate(request)
-      if (auth.error) return auth.error
-      return HttpResponse.json(walletsTable.listByUser(auth.user.id))
-    }),
+    withScenario(
+      'wallets.list',
+      withAuth((_info, { user }) => HttpResponse.json(walletsTable.listByUser(user.id))),
+    ),
   ),
 
   http.post(
     `${API_BASE_URL}/me/wallets`,
-    withScenario('wallets.create', async ({ request }) => {
-      const auth = authenticate(request)
-      if (auth.error) return auth.error
-      const body = await readJson(request)
-      if (!isObject(body)) return badBody()
-      const parsed = createWalletRequestSchema.safeParse(body)
-      if (!parsed.success) return validationError(parsed.error.issues)
-      const { makePrimary, ...input } = parsed.data
-      const userId = auth.user.id
-      if (walletsTable.countByUser(userId) >= MAX_WALLETS) {
-        return apiError(422, 'wallet_limit_reached', `Você pode salvar até ${MAX_WALLETS} carteiras`)
-      }
-      if (walletsTable.findDuplicate(userId, input.network, input.address)) return duplicate()
-      return HttpResponse.json(walletsTable.create(userId, input, makePrimary), { status: 201 })
-    }),
+    withScenario(
+      'wallets.create',
+      withAuth(async ({ request }, auth) => {
+        const body = await readJson(request)
+        if (!isJsonObject(body)) return invalidBody()
+        const parsed = createWalletRequestSchema.safeParse(body)
+        if (!parsed.success) return validationError(parsed.error.issues)
+        const { makePrimary, ...input } = parsed.data
+        const userId = auth.user.id
+        if (walletsTable.countByUser(userId) >= MAX_WALLETS) {
+          return apiError(422, 'wallet_limit_reached', `Você pode salvar até ${MAX_WALLETS} carteiras`)
+        }
+        if (walletsTable.findDuplicate(userId, input.network, input.address)) return duplicate()
+        return HttpResponse.json(walletsTable.create(userId, input, makePrimary), { status: 201 })
+      }),
+    ),
   ),
 
   /** PATCH parcial: corpo + carteira atual, validados juntos (trocar a rede revalida o endereço). */
   http.patch(
     walletPath,
-    withScenario('wallets.update', async ({ request, params }) => {
-      const auth = authenticate(request)
-      if (auth.error) return auth.error
-      const userId = auth.user.id
-      const current = walletsTable.findForUser(userId, idOf(params))
-      if (!current) return notFound()
-      const body = await readJson(request)
-      if (!isObject(body)) return badBody()
-      const parsed = walletInputSchema.safeParse({ ...toInput(current), ...body })
-      if (!parsed.success) return validationError(parsed.error.issues)
-      if (walletsTable.findDuplicate(userId, parsed.data.network, parsed.data.address, current.id)) return duplicate()
-      const updated = walletsTable.update(userId, current.id, parsed.data)
-      return updated ? HttpResponse.json(updated) : notFound()
-    }),
+    withScenario(
+      'wallets.update',
+      withAuth(async ({ request, params }, auth) => {
+        const userId = auth.user.id
+        const current = walletsTable.findForUser(userId, idOf(params))
+        if (!current) return walletNotFound()
+        const body = await readJson(request)
+        if (!isJsonObject(body)) return invalidBody()
+        const parsed = walletInputSchema.safeParse({ ...toInput(current), ...body })
+        if (!parsed.success) return validationError(parsed.error.issues)
+        if (walletsTable.findDuplicate(userId, parsed.data.network, parsed.data.address, current.id)) return duplicate()
+        const updated = walletsTable.update(userId, current.id, parsed.data)
+        return updated ? HttpResponse.json(updated) : walletNotFound()
+      }),
+    ),
   ),
 
   http.delete(
     walletPath,
-    withScenario('wallets.remove', ({ request, params }) => {
-      const auth = authenticate(request)
-      if (auth.error) return auth.error
-      const result = walletsTable.remove(auth.user.id, idOf(params))
-      return result ? new HttpResponse(null, { status: 204 }) : notFound()
-    }),
+    withScenario(
+      'wallets.remove',
+      withAuth(({ params }, auth) => {
+        const result = walletsTable.remove(auth.user.id, idOf(params))
+        return result ? new HttpResponse(null, { status: 204 }) : walletNotFound()
+      }),
+    ),
   ),
 
   http.post(
     `${walletPath}/primary`,
-    withScenario('wallets.primary', ({ request, params }) => {
-      const auth = authenticate(request)
-      if (auth.error) return auth.error
-      const list = walletsTable.setPrimary(auth.user.id, idOf(params))
-      return list ? HttpResponse.json(list) : notFound()
-    }),
+    withScenario(
+      'wallets.primary',
+      withAuth(({ params }, auth) => {
+        const list = walletsTable.setPrimary(auth.user.id, idOf(params))
+        return list ? HttpResponse.json(list) : walletNotFound()
+      }),
+    ),
   ),
 ]
