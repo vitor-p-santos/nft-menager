@@ -152,7 +152,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
               width={138}
               height={138}
               loading={desktop ? 'lazy' : 'eager'}
-              className="absolute top-2.5 right-4 aspect-square w-[35%] max-w-[138px] rounded-[15px] object-cover"
+              className="absolute top-2.5 right-4 aspect-square w-[35%] max-w-[138px] rounded-xl object-cover"
             />
             <ResponsiveImage
               src={slide.secondaryImage.src}

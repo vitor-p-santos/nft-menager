@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
-import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import headerDivider from '@/assets/decor/header-divider.svg'
 import navUnderline from '@/assets/decor/nav-underline.svg'
 import cartIcon from '@/assets/icons/cart.svg'
@@ -26,7 +26,7 @@ import { cn } from '@/lib/utils'
 /** Rotas do fluxo "Mercado" (detalhe, carrinho, pagamento) — o Figma ativa "Mercado" nelas. */
 const MARKET_PATHS = ['/nft', '/carrinho', '/checkout']
 
-function NavItem({ active, children }: { active: boolean; children: React.ReactNode }) {
+function NavItem({ active, children }: { active: boolean; children: ReactNode }) {
   return (
     <span className="flex flex-col gap-6">
       <span className={cn('text-body-lg leading-normal', active ? 'font-bold text-text-accent' : 'text-foreground')}>
@@ -41,6 +41,7 @@ function NavItem({ active, children }: { active: boolean; children: React.ReactN
 function HeaderSearch() {
   const [open, setOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const toggleRef = useRef<HTMLButtonElement>(null)
   const navigate = useNavigate()
   const inputId = useId()
 
@@ -49,34 +50,44 @@ function HeaderSearch() {
     if (open) inputRef.current?.focus()
   }, [open])
 
+  /**
+   * Fecha a busca (Esc ou envio) e devolve o foco ao botão que a abriu: o campo sai do DOM.
+   * Sem rolar: no envio a navegação leva ao catálogo, que fica abaixo do header.
+   */
+  function close() {
+    setOpen(false)
+    toggleRef.current?.focus({ preventScroll: true })
+  }
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const q = new FormData(event.currentTarget).get('q')?.toString().trim()
     void navigate({ to: '/', search: (prev) => ({ ...prev, q: q || undefined, page: undefined }), hash: CATALOG_SECTION_ID })
-    setOpen(false)
+    close()
   }
 
   return (
     <div className="relative flex items-center">
       {open && (
         <search className="absolute right-8 w-64">
-        <form onSubmit={submit}>
-          <label htmlFor={inputId} className="sr-only">
-            Buscar NFTs
-          </label>
-          <input
-            ref={inputRef}
-            id={inputId}
-            name="q"
-            type="search"
-            placeholder="Buscar NFTs..."
-            onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}
-            className="h-[35px] w-full rounded-md border border-border bg-surface-card px-3 text-body text-foreground placeholder:text-secondary"
-          />
-        </form>
+          <form onSubmit={submit}>
+            <label htmlFor={inputId} className="sr-only">
+              Buscar NFTs
+            </label>
+            <input
+              ref={inputRef}
+              id={inputId}
+              name="q"
+              type="search"
+              placeholder="Buscar NFTs..."
+              onKeyDown={(e) => e.key === 'Escape' && close()}
+              className="h-[35px] w-full rounded-md border border-border bg-surface-card px-3 text-body text-foreground placeholder:text-secondary"
+            />
+          </form>
         </search>
       )}
       <button
+        ref={toggleRef}
         type="button"
         aria-label={open ? 'Fechar busca' : 'Abrir busca'}
         aria-expanded={open}
@@ -122,7 +133,7 @@ function CartLink() {
       {count > 0 && (
         <span
           aria-hidden
-          className="absolute -top-1.5 right-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] leading-none font-bold text-primary-foreground tabular-nums"
+          className="absolute -top-1.5 right-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-micro leading-none font-bold text-primary-foreground tabular-nums"
         >
           {count > 99 ? '99+' : count}
         </span>

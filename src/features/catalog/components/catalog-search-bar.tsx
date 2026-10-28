@@ -54,7 +54,7 @@ export function CatalogSearchBar({
             navigate({ q: term || undefined })
             ;(document.activeElement as HTMLElement | null)?.blur()
           }}
-          className="flex h-[45px] items-center gap-2 rounded-[10px] bg-card px-3 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ring"
+          className="flex h-[45px] items-center gap-2 rounded-field bg-card px-3 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ring"
         >
           <label id={labelId} htmlFor={CATALOG_SEARCH_INPUT_ID} className="sr-only">
             Buscar NFTs
@@ -75,7 +75,7 @@ export function CatalogSearchBar({
         type="button"
         onClick={onOpenFilters}
         aria-haspopup="dialog"
-        className="relative flex size-[45px] shrink-0 cursor-pointer items-center justify-center rounded-[10px] bg-[linear-gradient(180deg,var(--brand-primary),color-mix(in_srgb,var(--brand-primary)_60%,transparent))]"
+        className="relative flex size-[45px] shrink-0 cursor-pointer items-center justify-center rounded-field bg-[linear-gradient(180deg,var(--brand-primary),color-mix(in_srgb,var(--brand-primary)_60%,transparent))]"
       >
         <img src={filterIcon} alt="" width={16} height={16} />
         {/* Nome acessível vem do conteúdo ("Filtros 2 ativos") e contém o número visível do badge */}
