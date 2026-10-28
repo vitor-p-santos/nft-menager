@@ -1,20 +1,25 @@
 import { useRouter } from '@tanstack/react-router'
-import { readPendingAction, sanitizeRedirect } from '@/entities/session'
+import { clearPendingAction, readPendingAction, sanitizeRedirect } from '@/entities/session'
 
 /**
- * Depois de entrar (login, cadastro ou OAuth), volta ao fluxo anterior:
- * 1. a rota da ação pendente (ex.: favoritar sem sessão), que a própria tela conclui ao montar;
- * 2. senão, o `redirect` do search param (expiração de sessão, rota privada);
- * 3. senão, `fallback` (páginas mobile → Início; modal → fica onde está).
- * Navega com `replace` para que "voltar" não reabra a tela de login.
+ * Depois de entrar (login, cadastro ou OAuth), volta ao fluxo anterior: o `redirect` do search param
+ * (expiração de sessão, rota privada, "Entre para favoritar"); sem ele, `fallback` (páginas mobile →
+ * Início; modal → fica onde está). Navega com `replace` para que "voltar" não reabra o login.
+ *
+ * A ação pendente (ex.: favoritar sem sessão) só vale para o fluxo que levou a este login: o destino
+ * é a rota dela (mesmo `redirect` ou, sem `redirect`, a tela atual), e a própria tela a conclui ao
+ * montar. Uma ação de outro fluxo (o usuário desistiu e foi comprar) é descartada: antes ela
+ * sequestrava o redirect e favoritava sem o usuário pedir.
  */
 export function useAuthSuccess() {
   const router = useRouter()
 
   return (redirect: string | undefined, fallback: string | null) => {
+    const here = router.state.location.href
+    const target = redirect ? sanitizeRedirect(redirect) : fallback
     const pending = readPendingAction()
-    const target = pending ? sanitizeRedirect(pending.redirect) : redirect ? sanitizeRedirect(redirect) : fallback
-    if (!target || target === router.state.location.href) return
+    if (pending && sanitizeRedirect(pending.redirect) !== (redirect ? target : here)) clearPendingAction()
+    if (!target || target === here) return
     void router.navigate({ href: target, replace: true })
   }
 }

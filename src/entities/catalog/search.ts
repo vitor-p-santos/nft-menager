@@ -11,16 +11,37 @@ export type CatalogSort = (typeof CATALOG_SORTS)[number]
 export const ethAmountSchema = z.string().regex(/^\d+(\.\d{1,18})?$/)
 
 /**
+ * O router grava listas e textos em JSON (`categories=["musica"]`), mas um link escrito à mão chega
+ * de outro jeito: `categories=musica,fotografia` vira texto solto e `minPrice=1` vira número (o router
+ * faz `JSON.parse` de cada valor). Os dois formatos são aceitos; antes o filtro sumia sem aviso.
+ */
+/** Valida `value` com `schema` dentro de um transform (o filtro inválido continua descartado pelo `.catch`). */
+function parseWith<T extends z.ZodType>(schema: T, value: unknown, ctx: z.RefinementCtx): z.output<T> {
+  const parsed = schema.safeParse(value)
+  if (parsed.success) return parsed.data
+  ctx.addIssue({ code: 'custom', message: 'Valor inválido na URL' })
+  return z.NEVER
+}
+
+const listParam = <T extends z.ZodType>(item: T) => {
+  const list = z.array(item).min(1)
+  const split = (value: string) => value.split(',').map((part) => part.trim()).filter(Boolean)
+  return z.union([list, z.string().transform((value, ctx) => parseWith(list, split(value), ctx))])
+}
+const textParam = <T extends z.ZodType>(schema: T) =>
+  z.union([schema, z.number().transform((value, ctx) => parseWith(schema, String(value), ctx))])
+
+/**
  * Estado do catálogo na URL. Valores padrão ficam fora da URL (undefined), e
  * entradas inválidas são descartadas com `.catch` em vez de quebrar a rota.
  */
 export const catalogSearchSchema = z.object({
-  q: z.string().trim().min(1).max(80).optional().catch(undefined),
-  categories: z.array(z.string().min(1)).min(1).optional().catch(undefined),
-  networks: z.array(networkSchema).min(1).optional().catch(undefined),
-  creator: z.string().min(1).optional().catch(undefined),
-  minPrice: ethAmountSchema.optional().catch(undefined),
-  maxPrice: ethAmountSchema.optional().catch(undefined),
+  q: textParam(z.string().trim().min(1).max(80)).optional().catch(undefined),
+  categories: listParam(z.string().min(1)).optional().catch(undefined),
+  networks: listParam(networkSchema).optional().catch(undefined),
+  creator: textParam(z.string().min(1)).optional().catch(undefined),
+  minPrice: textParam(ethAmountSchema).optional().catch(undefined),
+  maxPrice: textParam(ethAmountSchema).optional().catch(undefined),
   tab: z.enum(CATALOG_TABS).optional().catch(undefined),
   sort: z.enum(CATALOG_SORTS).optional().catch(undefined),
   page: z.number().int().min(1).optional().catch(undefined),

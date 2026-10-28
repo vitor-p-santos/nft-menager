@@ -6,6 +6,11 @@ import { expect, test } from '../fixtures/app'
  * Fase 4: /entrar e /cadastro (páginas, só abaixo de md; a partir dele viram o modal) e o modal
  * "Entrar | Criar conta" do header (md+), já com os erros de validação visíveis. Sem violações sérias/críticas.
  */
+// Audita o estado final: com movimento reduzido o CSS do projeto desliga as transições, e a troca de
+// aba "Criar conta" acusava color-contrast intermitente sob carga (a cor medida no meio da transição).
+// Mesma escolha dos testes visuais.
+test.use({ reducedMotion: 'reduce' })
+
 async function seriousViolations(page: Page, label: string) {
   // No meio de uma transição de cor (ex.: troca de aba do modal) o axe mede a cor intermediária e acusa
   // color-contrast de forma intermitente; audita o estado final. Animações infinitas (spinner) não contam.

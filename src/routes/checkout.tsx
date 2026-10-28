@@ -1,11 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { requireAuth } from '@/features/auth/auth-route'
+import { leaveCheckout } from '@/features/checkout/api/queries'
 import { CheckoutPage } from '@/features/checkout/components/checkout-page'
 import { useWalletActions } from '@/features/profile/hooks/use-wallet-actions'
 
 export const Route = createFileRoute('/checkout')({
   // Rota privada: sem sessão vai para /entrar?redirect=/checkout e volta para cá depois do login
   beforeLoad: requireAuth,
+  // Saída pelo app: um pedido que concluir depois não reabre no próximo checkout (reports/BUGS.md, item 3)
+  onLeave: leaveCheckout,
   // Figma Mobile / Pagamento: tela própria (voltar + título), sem tab bar
   staticData: { hideMobileTabBar: true },
   component: CheckoutRoute,

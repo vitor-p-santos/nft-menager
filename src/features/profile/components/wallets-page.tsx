@@ -2,9 +2,11 @@ import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Skeleton } from '@/components/feedback/skeleton'
 import { ErrorState } from '@/components/feedback/states'
+import { SessionExpiredState } from '@/components/feedback/session-expired-state'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { useCurrentUser, type User } from '@/entities/session'
 import type { Wallet } from '@/entities/wallet'
+import { isUnauthorizedError } from '@/lib/api'
 import { getProfileFormErrors, useRemoveWallet, useSetPrimaryWallet, walletQueries } from '../api'
 import { MAX_WALLETS } from '../schemas'
 import { PrimaryWalletSection, SecondaryWalletsSection, type Adding } from './wallet-sections'
@@ -142,6 +144,7 @@ export function WalletsPage() {
   const user = useCurrentUser()
   const wallets = useQuery({ ...walletQueries.list(), enabled: user !== null })
   if (user && wallets.data) return <WalletsContent user={user} wallets={wallets.data} />
+  if (isUnauthorizedError(wallets.error)) return <SessionExpiredState description="Entre novamente para ver suas carteiras." />
   if (wallets.isError) {
     return (
       <ErrorState

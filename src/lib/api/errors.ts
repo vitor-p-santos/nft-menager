@@ -85,3 +85,6 @@ export function toApiError(error: unknown): ApiError {
     details: body?.details,
   })
 }
+
+/** 401: sessão ausente ou vencida (não é problema de conexão; a UI pede login). */
+export const isUnauthorizedError = (error: unknown): boolean => error instanceof ApiError && error.kind === 'unauthorized'

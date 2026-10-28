@@ -3,12 +3,14 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { Skeleton } from '@/components/feedback/skeleton'
 import { EmptyState, ErrorState } from '@/components/feedback/states'
+import { SessionExpiredState } from '@/components/feedback/session-expired-state'
 import { Container } from '@/components/layout/container'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { Pagination } from '@/components/ui/pagination'
 import { ExploreLink } from '@/entities/catalog/explore-link'
 import { ORDER_STATUSES, type OrderList } from '@/entities/order'
 import { cn } from '@/lib/utils'
+import { isUnauthorizedError } from '@/lib/api'
 import { orderListQuery } from '../api'
 import type { ActivitySearch } from '../schemas/activity-search'
 import { ORDER_FILTER_LABELS, ORDER_STATUS_LABELS } from './order-labels'
@@ -155,6 +157,8 @@ export function ActivityPage({ search }: { search: ActivitySearch }) {
           />
         </div>
       )
+  } else if (isUnauthorizedError(query.error)) {
+    content = <SessionExpiredState description="Entre novamente para ver seus pedidos." />
   } else if (query.isError) {
     content = (
       <ErrorState

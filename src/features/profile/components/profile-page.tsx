@@ -5,9 +5,11 @@ import { useId, useState, type FormEvent } from 'react'
 import { useForm, type FieldValues, type UseFormReturn } from 'react-hook-form'
 import { Skeleton } from '@/components/feedback/skeleton'
 import { ErrorState } from '@/components/feedback/states'
+import { SessionExpiredState } from '@/components/feedback/session-expired-state'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { InputField, PasswordField } from '@/components/ui/form-field'
 import { cn } from '@/lib/utils'
+import { isUnauthorizedError } from '@/lib/api'
 import { getProfileFormErrors, profileQueries, useChangePassword, useUpdateProfile } from '../api'
 import {
   changePasswordFormDefaults,
@@ -204,6 +206,7 @@ function ProfileSkeleton() {
 export function ProfilePage() {
   const profile = useQuery(profileQueries.detail())
   if (profile.data) return <ProfileForms profile={profile.data} />
+  if (isUnauthorizedError(profile.error)) return <SessionExpiredState description="Entre novamente para ver seu perfil." />
   if (profile.isError) {
     return (
       <ErrorState

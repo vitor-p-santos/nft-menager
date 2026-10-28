@@ -1,4 +1,5 @@
 import { XIcon } from 'lucide-react'
+import type { RefObject } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { NETWORK_LABELS } from '@/entities/nft'
@@ -19,6 +20,11 @@ type OrderStatusDialogProps = {
   onCloseConfirmed: () => void
   /** Fecha o aviso de recusa: volta ao formulário (o carrinho continua intacto). */
   onCloseRejected: () => void
+  /**
+   * Quem recebe o foco ao fechar (o modal é controlado, sem `DialogTrigger`: sem isso o foco caía no
+   * `body`). O checkout passa o "Confirmar compra".
+   */
+  returnFocusRef?: RefObject<HTMLElement | null>
 }
 
 /**
@@ -29,7 +35,7 @@ type OrderStatusDialogProps = {
  *   dá para fechar: o status chega do servidor (evento `order.updated`, com polling de reserva).
  * A confirmação só aparece quando a API devolve `confirmed`.
  */
-export function OrderStatusDialog({ order, onCloseConfirmed, onCloseRejected }: OrderStatusDialogProps) {
+export function OrderStatusDialog({ order, onCloseConfirmed, onCloseRejected, returnFocusRef }: OrderStatusDialogProps) {
   const status = order?.status
   const close = status === 'confirmed' ? onCloseConfirmed : onCloseRejected
 
@@ -39,6 +45,12 @@ export function OrderStatusDialog({ order, onCloseConfirmed, onCloseRejected }: 
         showCloseButton={false}
         onEscapeKeyDown={(event) => status === 'pending' && event.preventDefault()}
         onInteractOutside={(event) => event.preventDefault()}
+        onCloseAutoFocus={(event) => {
+          const target = returnFocusRef?.current
+          if (!target?.isConnected) return
+          event.preventDefault()
+          target.focus()
+        }}
         aria-busy={status === 'pending'}
         className={cn(
           'flex flex-col gap-0 overflow-y-auto rounded-none border-0 bg-surface-card p-0 pt-[22px]',

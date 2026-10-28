@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import '@/lib/zod-locale'
 import '@/styles/globals.css'
 
 async function enableMocking() {

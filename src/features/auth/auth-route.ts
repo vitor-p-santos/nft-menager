@@ -27,3 +27,8 @@ export function requireAuth({ location }: { location: { href: string } }) {
     throw redirect({ to: '/entrar', search: { redirect: location.href } })
   }
 }
+
+/** Algum match da rota atual é privado (usa `requireAuth`): sem sessão, a tela não tem o que mostrar. */
+export function isPrivateMatch(routeOptions: readonly { beforeLoad?: unknown }[]): boolean {
+  return routeOptions.some((options) => options.beforeLoad === requireAuth)
+}

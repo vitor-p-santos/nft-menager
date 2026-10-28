@@ -71,11 +71,17 @@ function settle(row: OrderRow): OrderRow {
 
   const owner: CartOwner = { userId: row.userId }
   const cart = cartsTable.get(owner)
-  const purchased = new Set(row.items.map((i) => i.id))
-  const items = cart.items.filter((i) => !purchased.has(i.id))
-  if (items.length !== cart.items.length || (row.coupon && cart.couponCode)) {
-    cartsTable.save(owner, { ...cart, items, couponCode: row.coupon ? null : cart.couponCode })
-  }
+  // Tira do carrinho só o que foi comprado: se a quantidade aumentou enquanto o pedido estava
+  // pendente, o excedente fica; o cupom só sai se for o usado no pedido (outro aplicado depois fica)
+  const bought = new Map(row.items.map((i) => [i.id, i.quantity]))
+  const items = cart.items.flatMap((item) => {
+    const quantity = item.quantity - (bought.get(item.id) ?? 0)
+    if (quantity === item.quantity) return [item]
+    return quantity > 0 ? [{ ...item, quantity }] : []
+  })
+  const couponCode = row.coupon && cart.couponCode === row.coupon.code ? null : cart.couponCode
+  const changed = items.length !== cart.items.length || items.some((item, i) => item !== cart.items[i])
+  if (changed || couponCode !== cart.couponCode) cartsTable.save(owner, { ...cart, items, couponCode })
 
   // Eventos só depois de tudo gravado (estoque, carrinho e recibo): quem reage refaz a busca e já encontra
   // o estado final.

@@ -55,10 +55,16 @@ export function useCollectorWallet(form: CollectorFormApi, wallets: Wallet[], pr
     else toggleOtherWallet(true)
   }
 
-  /** A carteira salva só vale se o formulário ainda aponta para ela (senão é carteira digitada). */
+  /**
+   * A carteira salva só vale se o formulário ainda aponta para ela: rede, endereço e tipo. Trocar o
+   * tipo (ex.: Coinbase no lugar da MetaMask salva) vira carteira digitada, e não a salva com outro tipo.
+   */
   function savedWalletIdFor(collector: CollectorInput): string | null {
     const saved = wallets.find((w) => w.id === selectedWalletId)
-    return saved && saved.network === collector.network && sameWalletAddress(saved.address, collector.walletAddress, collector.network)
+    return saved &&
+      saved.network === collector.network &&
+      saved.provider === collector.walletProvider &&
+      sameWalletAddress(saved.address, collector.walletAddress, collector.network)
       ? saved.id
       : null
   }

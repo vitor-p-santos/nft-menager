@@ -49,6 +49,13 @@ function FiltersSkeleton() {
   )
 }
 
+/** Anúncio do `aria-live` dos resultados (inclui a página além da última). */
+function resultsStatus({ total, page, totalPages }: { total: number; page: number; totalPages: number }) {
+  const found = `${total} ${total === 1 ? 'NFT encontrado' : 'NFTs encontrados'}`
+  const pages = Math.max(totalPages, 1)
+  return page > pages ? `${found}, mas a página ${page} não existe` : `${found}, página ${page} de ${pages}`
+}
+
 /**
  * Catálogo da Home (Figma "Products" e Mobile "Tabs/Grid"): busca, filtros combináveis, abas,
  * ordenação e paginação, todos sincronizados com a URL pela função `navigate` da rota.
@@ -87,11 +94,14 @@ export function CatalogSection({ search, navigate, hero, aside, renderCardAction
     sectionRef.current?.scrollIntoView({ block: 'start' })
   }
 
-  const filters = data ? (
-    <CatalogFilters search={search} facets={data.facets} navigate={navigate} onApplied={() => setFiltersOpen(false)} />
-  ) : (
-    <FiltersSkeleton />
-  )
+  // Os filtros vêm da mesma resposta: com o catálogo em erro (e nada carregado) não há o que mostrar,
+  // e o skeleton ficaria animando para sempre ao lado da mensagem de erro
+  let filters: ReactNode = null
+  if (data) {
+    filters = <CatalogFilters search={search} facets={data.facets} navigate={navigate} onApplied={() => setFiltersOpen(false)} />
+  } else if (!query.isError) {
+    filters = <FiltersSkeleton />
+  }
 
   let results: ReactNode
   if (query.isError && !data) {
@@ -111,6 +121,15 @@ export function CatalogSection({ search, navigate, hero, aside, renderCardAction
           </li>
         ))}
       </ul>
+    )
+  } else if (data.items.length === 0 && data.total > 0) {
+    // Página além da última (link antigo ou URL editada): há resultados, só não nesta página
+    results = (
+      <EmptyState
+        title="Esta página não tem NFTs"
+        description={`A busca tem ${data.totalPages} ${data.totalPages === 1 ? 'página' : 'páginas'}. Volte para a primeira.`}
+        action={{ label: 'Ir para a primeira página', onClick: () => goToPage(1) }}
+      />
     )
   } else if (data.items.length === 0) {
     results = (
@@ -177,9 +196,7 @@ export function CatalogSection({ search, navigate, hero, aside, renderCardAction
               <ActiveChips chips={chips} navigate={navigate} />
 
               <output aria-live="polite" className="sr-only">
-                {data && !query.isFetching
-                  ? `${data.total} ${data.total === 1 ? 'NFT encontrado' : 'NFTs encontrados'}, página ${data.page} de ${Math.max(data.totalPages, 1)}`
-                  : ''}
+                {data && !query.isFetching ? resultsStatus(data) : ''}
               </output>
               {query.isError && data && (
                 <p role="alert" className="text-body text-muted-foreground">

@@ -176,6 +176,7 @@ export function NftDetail({ nftId }: { nftId: string }) {
     return (
       <Container className="py-10 md:py-16">
         <EmptyState
+          titleAs="h1"
           title="NFT não encontrado"
           description="Ele pode ter sido removido ou o link está incorreto."
           action={<ExploreLink>Voltar ao catálogo</ExploreLink>}
@@ -187,6 +188,7 @@ export function NftDetail({ nftId }: { nftId: string }) {
     return (
       <Container className="py-10 md:py-16">
         <ErrorState
+          titleAs="h1"
           title="Não foi possível carregar este NFT"
           description="Verifique sua conexão e tente novamente."
           action={{ label: 'Tentar novamente', onClick: () => void refetch() }}

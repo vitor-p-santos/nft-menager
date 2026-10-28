@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { useSetCart } from '@/entities/cart'
+import { mergeAnonymousCart, useSetCart } from '@/entities/cart'
 import { api, http } from '@/lib/api'
 import { cartSchema, couponInputSchema, type CouponInput } from '../schemas/cart'
 
@@ -36,6 +36,19 @@ export function useRemoveCoupon() {
   const setCart = useSetCart()
   return useMutation({
     mutationFn: async () => cartSchema.parse((await http.delete<unknown>('/cart/coupon')).data),
+    onSuccess: setCart,
+  })
+}
+
+/** "Tentar novamente" do aviso de junção pendente: traz o carrinho do visitante para a conta. */
+export function useRetryCartMerge() {
+  const setCart = useSetCart()
+  return useMutation({
+    mutationFn: async () => {
+      const cart = await mergeAnonymousCart()
+      if (!cart) throw new Error('Não foi possível trazer o carrinho de visitante')
+      return cart
+    },
     onSuccess: setCart,
   })
 }

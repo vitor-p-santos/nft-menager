@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { Skeleton } from '@/components/feedback/skeleton'
 import { EmptyState, ErrorState } from '@/components/feedback/states'
+import { SessionExpiredState } from '@/components/feedback/session-expired-state'
 import { Container } from '@/components/layout/container'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { NETWORK_LABELS } from '@/entities/nft'
@@ -16,7 +17,7 @@ import {
   RejectedOrderActions,
   ThankYouArt,
 } from '@/entities/order/order-status-panel'
-import { ApiError } from '@/lib/api'
+import { ApiError, isUnauthorizedError } from '@/lib/api'
 import { formatEthLabel } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { orderReceiptQuery, useOrderDetail } from '../api'
@@ -202,6 +203,8 @@ export function OrderPage({ orderId }: { orderId: string }) {
         }
       />
     )
+  } else if (isUnauthorizedError(order.error)) {
+    content = <SessionExpiredState description="Entre novamente para ver o pedido." />
   } else if (order.isError) {
     content = (
       <ErrorState

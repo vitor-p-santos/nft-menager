@@ -90,7 +90,7 @@ export function ProfileShell({ current, signOut, children }: ProfileShellProps) 
       <PageHeading title={title} fallback={{ to: '/' }} />
 
       {/* Desktop: menu lateral fixo */}
-      <nav aria-label="Meu perfil" className="hidden w-[310px] shrink-0 bg-surface-card pt-[18px] pb-[18px] xl:block">
+      <nav aria-label="Menu do perfil" className="hidden w-[310px] shrink-0 bg-surface-card pt-[18px] pb-[18px] xl:block">
         <p aria-hidden className="mb-1.5 px-2.5 text-lead leading-6 font-bold text-foreground">
           Meu perfil
         </p>
@@ -107,7 +107,7 @@ export function ProfileShell({ current, signOut, children }: ProfileShellProps) 
           </span>
           <ChevronDownIcon aria-hidden className="size-4 text-text-accent transition-transform group-open:rotate-180 motion-reduce:transition-none" />
         </summary>
-        <nav aria-label="Meu perfil" className="pb-2">
+        <nav aria-label="Menu do perfil" className="pb-2">
           <MenuItems current={current} />
           <SignOutItem signOut={signOut} />
         </nav>

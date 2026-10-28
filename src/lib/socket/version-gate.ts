@@ -19,12 +19,6 @@ export class VersionGate {
     return true
   }
 
-  /** Sincroniza com a versão vinda de uma resposta REST (fonte de verdade após refetch). */
-  observe(entityId: string, version: number) {
-    const current = this.versions.get(entityId)
-    if (current === undefined || version > current) this.versions.set(entityId, version)
-  }
-
   reset() {
     this.versions.clear()
     this.seen.clear()

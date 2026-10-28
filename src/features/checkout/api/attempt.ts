@@ -12,7 +12,9 @@ import type { CreateOrderPayload } from '../schemas/checkout'
  * - mesmo payload → mesma chave (duplo clique, retry, reenvio após refresh);
  * - resposta 4xx definitiva (409, 422, 401…) → nenhum pedido foi criado → descarta;
  * - timeout / rede / 5xx → resultado desconhecido → mantém e tenta recuperar por `GET /orders/by-key/:key`;
- * - pedido concluído (`confirmed`/`rejected`) observado pelo client → descarta (`useCheckoutOrder`).
+ * - pedido concluído (`confirmed`/`rejected`) observado pelo client → descarta (`useCheckoutOrder`);
+ * - o usuário sai do checkout pelo app (não é refresh) → marca `leftAt`: ao voltar, um pedido que já
+ *   concluiu nesse meio-tempo não reaparece como o resultado da compra nova (fica na Atividade).
  */
 const PREFIX = 'kurio:checkout-attempt:'
 
@@ -22,6 +24,8 @@ export const checkoutAttemptSchema = z.object({
   quoteId: z.string(),
   orderId: z.string().nullable(),
   createdAt: z.number().int().nonnegative(),
+  /** Quando o usuário saiu do checkout com esta tentativa aberta (`null` = ainda nele, ou refresh). */
+  leftAt: z.number().int().nonnegative().nullable().default(null),
 })
 export type CheckoutAttempt = z.infer<typeof checkoutAttemptSchema>
 
@@ -65,4 +69,10 @@ export function clearCheckoutAttempt(userId: string, key?: string) {
   } catch {
     // ignora
   }
+}
+
+/** Saída do checkout pelo app (`onLeave` da rota): a tentativa aberta fica marcada como deixada. */
+export function markCheckoutAttemptLeft(userId: string) {
+  const current = readCheckoutAttempt(userId)
+  if (current && current.leftAt === null) saveCheckoutAttempt(userId, { ...current, leftAt: Date.now() })
 }

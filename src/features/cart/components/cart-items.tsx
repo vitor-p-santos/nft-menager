@@ -43,6 +43,7 @@ function RemoveButton({ item, actions, icon, className }: { item: CartItem; acti
     <button
       type="button"
       aria-label={`Remover ${item.nft.name} do carrinho`}
+      data-cart-remove={item.id}
       disabled={actions.isPending(item)}
       onClick={() => actions.removeItem(item)}
       className={cn('flex size-6 cursor-pointer items-center justify-center rounded-sm disabled:cursor-wait disabled:opacity-50', className)}
