@@ -34,6 +34,14 @@ export function normalizeEnsName(value: string): string {
   return lower.endsWith('.eth') ? lower : `${lower}.eth`
 }
 
+/**
+ * Inverso de `normalizeEnsName` para os campos com o sufixo ".eth" fixo: "ana.eth" → "ana".
+ * `null`/ausente vira '' (valor de formulário).
+ */
+export function stripEthSuffix(value: string | null | undefined): string {
+  return value ? value.replace(/\.eth$/i, '') : ''
+}
+
 /** Mesmo endereço (EVM sem diferenciar maiúsculas; Solana exato). */
 export function sameWalletAddress(a: string, b: string, network: Network): boolean {
   return network === 'solana' ? a === b : a.toLowerCase() === b.toLowerCase()

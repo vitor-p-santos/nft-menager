@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { displayNameSchema, emailSchema, newPasswordSchema, userSchema, usernameSchema, type User } from '@/entities/session'
+import { stripEthSuffix } from '@/entities/wallet'
 import { optionalEnsNameSchema, optionalText } from './text'
 
 /**
@@ -53,13 +54,13 @@ export function profileFormSchemaFor(hasWallet: boolean) {
   })
 }
 
-/** Valores iniciais do formulário a partir do perfil (opcionais `null` viram ''). */
+/** Valores iniciais do formulário a partir do perfil (opcionais `null` viram ''; o ENS sem o ".eth" fixo do campo). */
 export function profileFormDefaults(profile: Profile): ProfileFormValues {
   return {
     displayName: profile.displayName,
     username: profile.username,
     email: profile.email,
-    ensName: profile.ensName ?? '',
+    ensName: stripEthSuffix(profile.ensName),
     walletNickname: profile.walletNickname ?? '',
   }
 }

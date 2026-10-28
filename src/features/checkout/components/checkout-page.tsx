@@ -12,7 +12,7 @@ import { buttonVariants } from '@/components/ui/button-variants'
 import { cartQueries } from '@/entities/cart'
 import { CATALOG_SECTION_ID } from '@/entities/catalog'
 import { useCurrentUser, type User } from '@/entities/session'
-import { walletQueries, type Wallet, type WalletProvider } from '@/entities/wallet'
+import { stripEthSuffix, walletQueries, type Wallet, type WalletProvider } from '@/entities/wallet'
 import { cn } from '@/lib/utils'
 import { useCheckoutFlow, type CheckoutFlow } from '../hooks/use-checkout-flow'
 import { collectorDefaults, collectorSchema, type CollectorFormValues, type CollectorInput } from '../schemas/checkout'
@@ -75,7 +75,7 @@ function walletFields(wallet: Wallet) {
     network: wallet.network,
     walletAddress: wallet.address,
     walletProvider: wallet.provider,
-    ensName: wallet.ensName?.replace(/\.eth$/i, '') ?? '',
+    ensName: stripEthSuffix(wallet.ensName),
   }
 }
 
@@ -83,7 +83,7 @@ function initialValues(user: User, wallet: Wallet | null): CollectorFormValues {
   const values = collectorDefaults(user, wallet)
   return {
     ...values,
-    ensName: values.ensName?.replace(/\.eth$/i, '') ?? '',
+    ensName: stripEthSuffix(values.ensName),
     // Select nativo controlado por RHF: sem valor, '' mantém o placeholder visível (senão o navegador
     // mostra a primeira opção, que não está no formulário); o schema acusa o campo vazio.
     network: values.network ?? ('' as CollectorFormValues['network']),

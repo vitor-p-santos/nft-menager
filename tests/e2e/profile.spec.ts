@@ -26,6 +26,8 @@ test('perfil: validação ligada ao campo, salvar, persistir e refletir no heade
   const main = page.getByRole('main')
   const username = field(main, 'Nome de usuário')
   await expect(username).toHaveValue('ana', { timeout: 15_000 })
+  // O campo tem o sufixo ".eth" fixo: mostra só o nome (não "ana.eth" + ".eth")
+  await expect(field(main, 'Nome ENS')).toHaveValue('ana')
 
   // Validação em português, ligada ao campo (aria-invalid + aria-describedby)
   await username.fill('ab')
@@ -35,7 +37,10 @@ test('perfil: validação ligada ao campo, salvar, persistir e refletir no heade
 
   await username.fill('ana.souza')
   await field(main, 'Nome de exibição').fill('Ana Souza')
+  const patch = page.waitForRequest((request) => request.method() === 'PATCH' && request.url().endsWith('/me/profile'))
   await main.getByRole('button', { name: 'Salvar', exact: true }).click()
+  // O ENS continua sendo gravado normalizado, com o sufixo
+  expect((await patch).postDataJSON()).toMatchObject({ ensName: 'ana.eth' })
   await expect(main.getByText('Perfil salvo.', { exact: true })).toBeVisible()
   await expect(username).not.toHaveAttribute('aria-invalid')
   await expect(accountMenu(page, { name: 'Ana Souza' })).toBeVisible()
@@ -43,6 +48,7 @@ test('perfil: validação ligada ao campo, salvar, persistir e refletir no heade
   await page.reload()
   await expect(field(main, 'Nome de usuário')).toHaveValue('ana.souza', { timeout: 15_000 })
   await expect(field(main, 'Nome de exibição')).toHaveValue('Ana Souza')
+  await expect(field(main, 'Nome ENS')).toHaveValue('ana')
   await expect(accountMenu(page, { name: 'Ana Souza' })).toBeVisible()
 })
 
