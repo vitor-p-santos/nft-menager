@@ -1,12 +1,15 @@
 import { useRouter } from '@tanstack/react-router'
 import { useSessionExpiredListener } from '../api'
-import { SESSION_EXPIRED_NOTICE } from '../auth-route'
+import { isPrivateMatch, SESSION_EXPIRED_NOTICE } from '../auth-route'
 import { authDialog, isDesktopViewport } from '../hooks/use-auth-dialog'
 
 /**
- * Reage ao 401 `session_expired` (a sessão já foi limpa pelo bridge): no desktop abre o modal de
- * login com o aviso, mantendo o usuário na tela; no mobile vai para `/entrar` com `redirect` =
- * rota + search atuais. Em ambos, depois de entrar, o fluxo volta ao ponto em que parou.
+ * Reage ao 401 `session_expired` (a sessão já foi limpa pelo bridge). Depois de entrar, o fluxo
+ * volta ao ponto em que parou:
+ * - tela pública no desktop (ex.: detalhe do NFT): abre o modal de login com o aviso, na própria tela;
+ * - tela privada (perfil, checkout, pedidos) ou mobile: vai para `/entrar` com `redirect` e o aviso.
+ *   No desktop `/entrar` vira o modal sobre o mercado. Antes, a tela privada ficava atrás do modal em
+ *   skeleton para sempre (sem sessão as queries dela não rodam).
  */
 export function SessionExpiredHandler() {
   const router = useRouter()
@@ -14,7 +17,8 @@ export function SessionExpiredHandler() {
   useSessionExpiredListener(() => {
     const { pathname, href } = router.state.location
     if (pathname === '/entrar' || pathname === '/cadastro') return
-    if (isDesktopViewport()) {
+    const onPrivateRoute = isPrivateMatch(router.state.matches.map((match) => router.routesById[match.routeId].options))
+    if (isDesktopViewport() && !onPrivateRoute) {
       authDialog.open('login', SESSION_EXPIRED_NOTICE)
       return
     }

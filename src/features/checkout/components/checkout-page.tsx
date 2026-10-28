@@ -2,10 +2,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { ChevronDownIcon } from 'lucide-react'
-import { useId, useState, type ReactNode } from 'react'
+import { useId, useRef, useState, type ReactNode, type RefObject } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { Skeleton } from '@/components/feedback/skeleton'
 import { EmptyState, ErrorState } from '@/components/feedback/states'
+import { SessionExpiredState } from '@/components/feedback/session-expired-state'
 import { Container } from '@/components/layout/container'
 import { Breadcrumbs, PageHeading } from '@/components/layout/page-heading'
 import { Button } from '@/components/ui/button'
@@ -17,6 +18,7 @@ import { useCurrentUser, type User } from '@/entities/session'
 import type { Network } from '@/entities/nft'
 import { stripEthSuffix, walletQueries, type Wallet, type WalletProvider } from '@/entities/wallet'
 import { cn } from '@/lib/utils'
+import { isUnauthorizedError } from '@/lib/api'
 import { useCheckoutFlow, type CheckoutFlow } from '../hooks/use-checkout-flow'
 import { useCollectorWallet } from '../hooks/use-collector-wallet'
 import { collectorDefaults, collectorSchema, collectorSchemaFor, type CollectorFormValues, type CollectorInput } from '../schemas/checkout'
@@ -64,6 +66,8 @@ type CheckoutFormProps = {
   network: Network | null
   flow: CheckoutFlow
   walletActions?: WalletMenuActions
+  /** "Confirmar compra": recebe o foco de volta quando o aviso de recusa fecha. */
+  confirmRef: RefObject<HTMLButtonElement | null>
 }
 
 /**
@@ -71,7 +75,7 @@ type CheckoutFormProps = {
  * à direita; no mobile, carteiras salvas + provedores, com os dados do colecionador recolhidos
  * (vêm do perfil) e abertos em "Trocar carteira" ou quando algo precisa ser corrigido.
  */
-function CheckoutForm({ user, wallets, network, flow, walletActions }: CheckoutFormProps) {
+function CheckoutForm({ user, wallets, network, flow, walletActions, confirmRef }: CheckoutFormProps) {
   const primary = wallets.find((w) => w.role === 'primary') ?? wallets[0] ?? null
   // Começa pela principal se ela for da rede dos NFTs; senão, pela primeira salva dessa rede
   const initialWallet = [primary, ...wallets].find((w) => w && (!network || w.network === network)) ?? null
@@ -195,6 +199,7 @@ function CheckoutForm({ user, wallets, network, flow, walletActions }: CheckoutF
             </div>
           )}
           <Button
+            ref={confirmRef}
             type="submit"
             variant="checkout"
             size="pill"
@@ -239,9 +244,12 @@ export function CheckoutPage({ walletActions }: { walletActions?: WalletMenuActi
   const cart = useQuery(cartQueries.get())
   const wallets = useQuery({ ...walletQueries.list(), enabled: user !== null })
   const flow = useCheckoutFlow(cart.data)
+  const confirmRef = useRef<HTMLButtonElement>(null)
 
   let content: ReactNode
-  if (cart.isError || wallets.isError) {
+  if (isUnauthorizedError(cart.error) || isUnauthorizedError(wallets.error)) {
+    content = <SessionExpiredState description="Entre novamente para concluir a compra." />
+  } else if (cart.isError || wallets.isError) {
     content = (
       <ErrorState
         title="Não foi possível carregar o pagamento"
@@ -287,6 +295,7 @@ export function CheckoutPage({ walletActions }: { walletActions?: WalletMenuActi
         network={cartNetworks(cart.data.items)[0] ?? null}
         flow={flow}
         walletActions={walletActions}
+        confirmRef={confirmRef}
       />
     )
   } else {
@@ -305,6 +314,7 @@ export function CheckoutPage({ walletActions }: { walletActions?: WalletMenuActi
       />
       <OrderStatusDialog
         order={flow.order}
+        returnFocusRef={confirmRef}
         onCloseRejected={flow.dismissOrder}
         onCloseConfirmed={() => {
           flow.dismissOrder()

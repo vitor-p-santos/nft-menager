@@ -6,7 +6,7 @@ Não há servidor real: a API REST e o Socket.IO são simulados no navegador pel
 
 **URL pública:** <https://nft-marketplace-ten-weld.vercel.app>
 
-Status das tarefas em [`TASKS.md`](TASKS.md). Revisão dos requisitos contra o código em [`reports/REQUIREMENTS.md`](reports/REQUIREMENTS.md). Bugs conhecidos em [`reports/BUGS.md`](reports/BUGS.md).
+Status das tarefas em [`TASKS.md`](TASKS.md). Revisão dos requisitos contra o código em [`reports/REQUIREMENTS.md`](reports/REQUIREMENTS.md). Caça de bugs e correções em [`reports/BUGS.md`](reports/BUGS.md).
 
 ## Requisitos
 - Node ≥ 22 e npm 10
@@ -148,7 +148,7 @@ reports/        REQUIREMENTS.md, playwright/ e lighthouse/
 - **Socket.IO simulado:** o binding não suporta long-polling, rooms nem namespaces. O client usa só `websocket` e o isolamento por usuário é filtrado no servidor simulado. O `socket.io-client` só pode ser carregado depois do `worker.start()` (ver `ARCHITECTURE.md`, R-2).
 - **Pagamento e carteiras simulados:** não há assinatura de transação nem conexão com MetaMask, WalletConnect ou Coinbase. O `txHash` é gerado pelo mock, e o link "Ver no Etherscan" aponta para um hash inexistente.
 - **Bundle:** o MSW (~495 kB) fica no caminho crítico porque ele é a API. Os chunks são baixados em paralelo (ver `ARCHITECTURE.md`, Performance).
-- **Bugs conhecidos:** 16 em aberto (reproduzidos) e 6 suspeitos, com passos para reproduzir, em [`reports/BUGS.md`](reports/BUGS.md). O item 1 (rede do pedido) já foi corrigido.
+- **Bugs da caça de 2026-10-28:** os 17 reproduzidos e 2 dos 6 suspeitos foram corrigidos, com regressão em `tests/e2e/bugfixes.spec.ts`. Os 3 suspeitos restantes são limitações do mock (várias abas, cada uma com o próprio MSW). Detalhes em [`reports/BUGS.md`](reports/BUGS.md).
 - **Fora do escopo ou incompleto** (lista completa em [`reports/REQUIREMENTS.md`](reports/REQUIREMENTS.md)):
   - "Minha coleção" aparece como "Disponível em breve". Os favoritos ficam em "Lista de interesse" (`/perfil/lista-de-interesse`).
   - "Ofertas", "Arquivos baixados" e "Suporte" do menu do perfil ficam ocultos (decisão D-06).

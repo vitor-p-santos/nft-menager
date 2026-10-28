@@ -46,7 +46,8 @@ function parseEthParam(value: string | null): bigint | undefined {
 function matches(nft: Nft, f: Filters, skip?: 'categories' | 'networks' | 'creator', now = Date.now()) {
   if (f.q) {
     const q = normalize(f.q)
-    const haystack = normalize(`${nft.name} ${nft.collection} ${nft.creator} ${nft.tokenId}`)
+    // Sem a coleção: o catálogo inteiro é "Kurio Apes", e "ape" casava os 36 NFTs (reports/BUGS.md, item 7)
+    const haystack = normalize(`${nft.name} ${nft.creator} ${nft.tokenId}`)
     if (!haystack.includes(q)) return false
   }
   if (skip !== 'categories' && f.categories && !f.categories.includes(nft.categoryId)) return false

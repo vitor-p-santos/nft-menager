@@ -26,8 +26,24 @@ function resolveOwner(request: Request): CartOwner | Response {
   return id && UUID.test(id) ? { anonymousId: id } : missingCartId()
 }
 
-function outOfStock(available: number) {
-  return apiError(409, 'out_of_stock', available === 0 ? 'Edição esgotada' : `Só há ${available} disponíveis`, { available })
+const units = (n: number) => `${n} ${n === 1 ? 'unidade' : 'unidades'}`
+
+/**
+ * 409 de estoque. `inCart` = o que já está no carrinho dessa edição: quem já tem o máximo precisa
+ * saber disso, e não só quantas há (antes: "Só há 1 disponíveis", sem dizer que já estava no carrinho).
+ */
+function outOfStock(available: number, inCart = 0) {
+  let message: string
+  if (available === 0) message = 'Edição esgotada'
+  else if (inCart >= available) {
+    message =
+      available === 1
+        ? 'Você já tem no carrinho a única unidade disponível desta edição'
+        : `Você já tem no carrinho todas as ${available} unidades disponíveis desta edição`
+  }
+  else if (inCart > 0) message = `Você já tem ${units(inCart)} no carrinho; só dá para adicionar mais ${units(available - inCart)}`
+  else message = available === 1 ? 'Só há 1 unidade disponível' : `Só há ${units(available)} disponíveis`
+  return apiError(409, 'out_of_stock', message, { available })
 }
 
 /** Erros de corpo do carrinho: com duas mensagens para o mesmo campo vale a última (contrato atual). */
@@ -60,7 +76,7 @@ export const cartHandlers = [
       const cart = cartsTable.get(owner)
       const existing = cart.items.find((i) => i.nftId === nft.id && i.edition === edition)
       const available = availableOf(nft, edition)
-      if ((existing?.quantity ?? 0) + quantity > available) return outOfStock(available)
+      if ((existing?.quantity ?? 0) + quantity > available) return outOfStock(available, existing?.quantity ?? 0)
       const items: CartRow[] = existing
         ? cart.items.map((i) => (i === existing ? { ...i, quantity: i.quantity + quantity, unitPriceWei: nft.priceWei } : i))
         : [

@@ -6,6 +6,8 @@ import { z } from 'zod'
  * Acesso ao storage sempre em try/catch: modo privado ou storage bloqueado não podem quebrar a UI.
  */
 const STORAGE_KEY = 'kurio:pending-action'
+/** Depois disso a ação é velha demais para ser concluída sozinha (o usuário já seguiu adiante). */
+const MAX_AGE_MS = 30 * 60_000
 
 export const pendingActionSchema = z.discriminatedUnion('type', [
   z.object({
@@ -27,15 +29,22 @@ export function savePendingAction(action: PendingAction): boolean {
   }
 }
 
+/** Ação pendente válida; vencida (mais de 30 min) ou corrompida é descartada. */
 export function readPendingAction(): PendingAction | null {
+  let action: PendingAction | null = null
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY)
     if (!raw) return null
     const parsed = pendingActionSchema.safeParse(JSON.parse(raw))
-    return parsed.success ? parsed.data : null
+    action = parsed.success ? parsed.data : null
   } catch {
     return null
   }
+  if (!action || Date.now() - action.createdAt > MAX_AGE_MS) {
+    clearPendingAction()
+    return null
+  }
+  return action
 }
 
 export function clearPendingAction() {
@@ -48,19 +57,11 @@ export function clearPendingAction() {
 
 /**
  * Lê e remove a ação pendente se ela satisfizer `match` (ex.: o FavoriteButton do mesmo NFT,
- * depois do login). Ações com mais de `maxAgeMs` são descartadas.
+ * depois do login). Ações vencidas já são descartadas por `readPendingAction`.
  */
-export function takePendingAction<T extends PendingAction>(
-  match: (action: PendingAction) => action is T,
-  maxAgeMs = 30 * 60_000,
-): T | null {
+export function takePendingAction<T extends PendingAction>(match: (action: PendingAction) => action is T): T | null {
   const action = readPendingAction()
-  if (!action) return null
-  if (Date.now() - action.createdAt > maxAgeMs) {
-    clearPendingAction()
-    return null
-  }
-  if (!match(action)) return null
+  if (!action || !match(action)) return null
   clearPendingAction()
   return action
 }

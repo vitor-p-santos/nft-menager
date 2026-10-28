@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { ErrorState, EmptyState } from '@/components/feedback/states'
+import { SessionExpiredState } from '@/components/feedback/session-expired-state'
 import { ExploreLink } from '@/entities/catalog/explore-link'
 import { NFT_GRID_CLASS, NftCard, NftCardSkeleton } from '@/entities/nft/nft-card'
+import { isUnauthorizedError } from '@/lib/api'
 import { favoritesQueries } from '../api/queries'
 import { FavoriteButton } from './favorite-button'
 
@@ -34,6 +36,8 @@ export function FavoritesPage() {
         action={<ExploreLink />}
       />
     )
+  } else if (isUnauthorizedError(favorites.error)) {
+    content = <SessionExpiredState description="Entre novamente para ver sua lista de interesse." />
   } else if (favorites.isError) {
     content = (
       <ErrorState

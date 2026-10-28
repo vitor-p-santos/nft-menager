@@ -1,7 +1,9 @@
 import { QueryClient } from '@tanstack/react-query'
 import { ApiError } from '@/lib/api'
 
-const NON_RETRYABLE = new Set(['validation', 'unauthorized', 'forbidden', 'not_found', 'conflict'])
+// `timeout`: cada tentativa já esperou API_TIMEOUT_MS (10 s); repetir deixava a tela ~30 s em skeleton
+// sem nenhum aviso. O erro aparece na hora, com "Tentar novamente". Falha de rede rápida ainda repete.
+const NON_RETRYABLE = new Set(['validation', 'unauthorized', 'forbidden', 'not_found', 'conflict', 'timeout'])
 
 export const queryClient = new QueryClient({
   defaultOptions: {

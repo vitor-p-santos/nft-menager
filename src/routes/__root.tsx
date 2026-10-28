@@ -28,6 +28,7 @@ function NotFound() {
   return (
     <Container className="py-16">
       <EmptyState
+        titleAs="h1"
         title="Página não encontrada"
         description="O endereço pode estar incorreto ou a página foi removida."
         action={

@@ -109,15 +109,29 @@ export type SessionExpiredEvent = z.infer<typeof sessionExpiredEventSchema>
 type ExpiredListener = (event: SessionExpiredEvent) => void
 
 const expiredListeners = new Set<ExpiredListener>()
+/**
+ * Expiração emitida antes de a UI se inscrever (ex.: o primeiro request depois de um refresh já volta
+ * 401): fica guardada e é entregue ao primeiro ouvinte. Antes ela se perdia e ninguém pedia o login.
+ */
+let undelivered: SessionExpiredEvent | null = null
 
 /** Inscreve a UI no evento de expiração. Devolve a função de cancelamento (use em `useEffect`). */
 export function onSessionExpired(listener: ExpiredListener) {
   expiredListeners.add(listener)
+  if (undelivered) {
+    const event = undelivered
+    undelivered = null
+    listener(event)
+  }
   return () => {
     expiredListeners.delete(listener)
   }
 }
 
 export function emitSessionExpired(event: SessionExpiredEvent) {
+  if (expiredListeners.size === 0) {
+    undelivered = event
+    return
+  }
   for (const listener of expiredListeners) listener(event)
 }

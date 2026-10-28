@@ -1,5 +1,5 @@
 import { matchQuery, type Query, type QueryClient, type QueryKey } from '@tanstack/react-query'
-import { cartKeys, cartSchema, type Cart } from '@/entities/cart'
+import { cartKeys, isCartMergePending, mergeAnonymousCart } from '@/entities/cart'
 import {
   clearPendingAction,
   emitSessionExpired,
@@ -7,7 +7,7 @@ import {
   sessionStore,
   type AuthResponse,
 } from '@/entities/session'
-import { api, configureSession, getCartId, http, resetCartId } from '@/lib/api'
+import { api, configureSession, http, resetCartId } from '@/lib/api'
 // Import direto (sem o index): não carrega o socket.io-client só para avisar a troca de sessão.
 import { resetSocketSession } from '@/lib/socket/session'
 import { authResponseSchema } from '../schemas/auth'
@@ -48,23 +48,6 @@ export async function resetUserData(queryClient: QueryClient, { seed = [] }: Res
 }
 
 /**
- * Junta o carrinho do visitante ao do usuário, com o token novo explícito (a sessão ainda não foi
- * trocada). Só descarta o `X-Cart-Id` se o merge der certo. Devolve o carrinho mesclado (ou `null`).
- */
-async function mergeAnonymousCart(token: string): Promise<Cart | null> {
-  try {
-    const cart = await api.post('/cart/merge', { anonymousCartId: getCartId() }, cartSchema, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-    resetCartId()
-    return cart
-  } catch {
-    // Mantém o id anônimo: o carrinho do visitante não se perde e entra no próximo login.
-    return null
-  }
-}
-
-/**
  * Conclui login, cadastro ou OAuth em uma rodada só: cancela os requests privados da identidade
  * anterior → mescla o carrinho anônimo com o token novo → troca a sessão, reconecta o socket e reseta
  * o cache privado (o `/auth/me` e o carrinho mesclado entram como `seed`, sem refetch).
@@ -82,7 +65,8 @@ export async function completeSignIn(queryClient: QueryClient, auth: AuthRespons
 
 /**
  * Logout: sempre conclui localmente, mesmo que a API falhe ou demore (o token é revogado em
- * segundo plano). Começa um carrinho anônimo novo para não herdar nada da conta.
+ * segundo plano). Começa um carrinho anônimo novo para não herdar nada da conta, exceto quando a
+ * junção do carrinho do visitante ficou pendente: aí ele é mantido.
  */
 export async function signOut(queryClient: QueryClient) {
   const token = sessionStore.getToken()
@@ -91,7 +75,8 @@ export async function signOut(queryClient: QueryClient) {
   }
   await queryClient.cancelQueries({ predicate: isPrivateQuery })
   sessionStore.signOut()
-  resetCartId()
+  // Junção pendente (falhou no login): o carrinho do visitante continua para a próxima tentativa
+  if (!isCartMergePending()) resetCartId()
   clearPendingAction()
   resetSocketSession(null)
   await resetUserData(queryClient)

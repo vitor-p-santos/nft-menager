@@ -4,10 +4,13 @@ import { LiveMessage } from '@/components/feedback/live-message'
 import { EmptyState, ErrorState } from '@/components/feedback/states'
 import { Container } from '@/components/layout/container'
 import { Breadcrumbs, PageHeading, type Crumb } from '@/components/layout/page-heading'
+import { buttonVariants } from '@/components/ui/button-variants'
+import { useCartMergePending } from '@/entities/cart'
 import { CATALOG_SECTION_ID } from '@/entities/catalog'
+import { useCurrentUser } from '@/entities/session'
 import { ExploreLink } from '@/entities/catalog/explore-link'
 import { cn } from '@/lib/utils'
-import { cartQueries } from '../api/queries'
+import { cartQueries, useRetryCartMerge } from '../api/queries'
 import { useCartItemActions } from '../hooks/use-cart-item-actions'
 import type { Cart } from '../schemas/cart'
 import { CartCards, CartItemsSkeleton, CartTable } from './cart-items'
@@ -61,11 +64,38 @@ function CartContent({ cart, related }: { cart: Cart; related?: ReactNode }) {
 }
 
 /**
+ * A junção do carrinho do visitante falhou no login: os itens dele não sumiram (o id anônimo foi
+ * mantido) e podem ser trazidos para a conta.
+ */
+function PendingMergeNotice() {
+  const retry = useRetryCartMerge()
+  return (
+    <div role="alert" className="flex flex-wrap items-center gap-x-4 gap-y-2 border-l-2 border-destructive bg-card px-4 py-3">
+      <p className="text-body leading-[22px] text-foreground">
+        {retry.isError
+          ? 'Ainda não foi possível trazer os itens que você adicionou antes de entrar.'
+          : 'Não foi possível trazer para a sua conta os itens que você adicionou antes de entrar.'}
+      </p>
+      <button
+        type="button"
+        disabled={retry.isPending}
+        onClick={() => retry.mutate()}
+        className={cn(buttonVariants({ variant: 'link', size: 'none' }), 'rounded-sm text-body-md disabled:cursor-wait')}
+      >
+        {retry.isPending ? 'Tentando…' : 'Tentar novamente'}
+      </button>
+    </div>
+  )
+}
+
+/**
  * Tela "Carrinho" (Figma desktop `11:1278`, mobile `16:360`). `related` é composto pela rota
  * ("Colecionadores também viram") para que esta feature não importe a de NFT.
  */
 export function CartPage({ related }: { related?: (cart: Cart) => ReactNode }) {
   const { data: cart, isError, refetch } = useQuery(cartQueries.get())
+  const user = useCurrentUser()
+  const mergePending = useCartMergePending()
 
   let content: ReactNode
   if (cart) {
@@ -92,6 +122,7 @@ export function CartPage({ related }: { related?: (cart: Cart) => ReactNode }) {
   return (
     <Container className="flex min-h-dvh flex-col gap-5 pt-[30px] md:gap-3 md:pt-0">
       <Heading />
+      {mergePending && user && <PendingMergeNotice />}
       {content}
     </Container>
   )

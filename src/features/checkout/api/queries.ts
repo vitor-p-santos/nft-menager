@@ -15,6 +15,7 @@ import {
 } from '../schemas/checkout'
 import {
   clearCheckoutAttempt,
+  markCheckoutAttemptLeft,
   payloadFingerprint,
   readCheckoutAttempt,
   saveCheckoutAttempt,
@@ -130,6 +131,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     quoteId: payload.quoteId,
     orderId: null,
     createdAt: Date.now(),
+    leftAt: null,
   })
 
   const key = attempt.key
@@ -162,13 +164,21 @@ export function getCheckoutConflictChanges(error: unknown): QuoteChange[] {
   return parsed.success ? parsed.data.changes : []
 }
 
+/** `onLeave` da rota `/checkout`: sair pelo app (não é refresh) marca a tentativa aberta como deixada. */
+export function leaveCheckout() {
+  const userId = sessionStore.getUser()?.id
+  if (userId) markCheckoutAttemptLeft(userId)
+}
+
 export type CheckoutRecovery = { attempt: CheckoutAttempt; order: Order }
 
 export const checkoutQueries = {
   /**
    * Ao abrir o checkout (ou depois de um refresh): existe uma compra em andamento deste usuário?
    * Devolve o pedido recuperado pela chave salva, ou `null` (sem tentativa, ou a chave nunca chegou
-   * ao servidor — nesse caso a tentativa é descartada).
+   * ao servidor — nesse caso a tentativa é descartada). Se o usuário saiu do checkout e o pedido
+   * concluiu nesse meio-tempo, a tentativa também é descartada: o checkout novo não reabre o
+   * resultado da compra anterior (que fica na Atividade).
    */
   recovery: (userId: string) =>
     queryOptions({
@@ -177,6 +187,10 @@ export const checkoutQueries = {
         const attempt = readCheckoutAttempt(userId)
         if (!attempt) return null
         const order = await fetchOrderByKey(attempt.key, signal)
+        if (order && attempt.leftAt !== null && isTerminalStatus(order.status)) {
+          clearCheckoutAttempt(userId, attempt.key)
+          return null
+        }
         if (order) return { attempt, order }
         if (!inFlight.has(attempt.key)) clearCheckoutAttempt(userId, attempt.key)
         return null

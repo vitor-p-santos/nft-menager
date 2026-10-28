@@ -1,6 +1,7 @@
 import { cartNetworks, networkMismatchMessage } from '@/entities/cart'
 import type { Network } from '@/entities/nft'
 import type { WalletSnapshot } from '@/entities/order'
+import { sameWalletAddress } from '@/entities/wallet'
 import type { CreateOrderPayload, Quote, QuoteChange } from '@/features/checkout/schemas/checkout'
 import { stableStringify } from '@/lib/hash'
 import { percentOfWei } from '@/lib/money'
@@ -167,11 +168,14 @@ export function resolveOrderWallet(userId: string, payload: CreateOrderPayload):
     if (saved.network !== payload.network) {
       return { issue: { path: ['network'], message: 'A rede do pedido deve ser a rede da carteira' } }
     }
-    if (saved.address.toLowerCase() !== collector.walletAddress.toLowerCase()) {
+    if (!sameWalletAddress(saved.address, collector.walletAddress, saved.network)) {
       return { issue: { path: ['collector', 'walletAddress'], message: 'O endereço difere da carteira selecionada' } }
     }
-    const { id, label, network, address, ensName } = saved
-    return { wallet: { walletId: id, label, provider: collector.walletProvider, network, address, ensName } }
+    if (saved.provider !== collector.walletProvider) {
+      return { issue: { path: ['collector', 'walletProvider'], message: 'O tipo difere da carteira selecionada' } }
+    }
+    const { id, label, network, address, ensName, provider } = saved
+    return { wallet: { walletId: id, label, provider, network, address, ensName } }
   }
   return {
     wallet: {

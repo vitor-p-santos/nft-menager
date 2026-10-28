@@ -72,7 +72,7 @@ export function InstitutionalPage({ slug }: { slug: PageSlug }) {
 export function PageNotFound() {
   return (
     <Container className="py-16">
-      <EmptyState title="Página não encontrada" description="O endereço pode estar incorreto ou a página foi removida." action={<BackHome />} />
+      <EmptyState titleAs="h1" title="Página não encontrada" description="O endereço pode estar incorreto ou a página foi removida." action={<BackHome />} />
     </Container>
   )
 }
