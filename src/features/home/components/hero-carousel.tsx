@@ -8,9 +8,8 @@ import { Container } from '@/components/layout/container'
 import { Button } from '@/components/ui/button'
 import { ResponsiveImage } from '@/components/ui/responsive-image'
 import { CATALOG_SECTION_ID } from '@/entities/catalog'
-import { MD_QUERY, useMediaQuery } from '@/lib/use-media-query'
+import { MD_QUERY, useMediaQuery, usePrefersReducedMotion } from '@/lib/use-media-query'
 import { cn } from '@/lib/utils'
-import { usePrefersReducedMotion } from '../hooks/use-reduced-motion'
 import type { HeroSlide } from '../schemas/content'
 
 const AUTOPLAY_MS = 6_000

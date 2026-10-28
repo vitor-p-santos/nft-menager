@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { ErrorState } from '@/components/feedback/states'
+import { prefersReducedMotion } from '@/lib/use-media-query'
 import { cn } from '@/lib/utils'
 import { NftCard, NftCardSkeleton } from './nft-card'
 import type { NftSummary } from './schema'
@@ -7,10 +8,6 @@ import type { NftSummary } from './schema'
 /** 2 cards no mobile, 3 no tablet e 5 de 218px no desktop (1200 = 5×218 + 4×27,5). */
 const ITEM = 'w-[calc((100%-16px)/2)] shrink-0 snap-start md:w-[calc((100%-55px)/3)] xl:w-[calc((100%-110px)/5)]'
 const TRACK = 'flex gap-4 md:gap-[27.5px]'
-
-function prefersReducedMotion() {
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
-}
 
 /**
  * Carrossel de NFTs do Figma ("Related" do detalhe e "Colecionadores também viram" do carrinho):
