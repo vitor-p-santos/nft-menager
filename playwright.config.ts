@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
-const PORT = 4173
+/** PLAYWRIGHT_PORT permite suítes em paralelo (ex.: worktrees), cada uma com o próprio preview. */
+const PORT = Number(process.env.PLAYWRIGHT_PORT ?? 4173)
 /** Com PLAYWRIGHT_BASE_URL a suíte roda contra um deploy publicado (ex.: Vercel) e não sobe o preview. */
 const remoteURL = process.env.PLAYWRIGHT_BASE_URL
 const baseURL = remoteURL ?? `http://localhost:${PORT}`
@@ -36,7 +37,7 @@ export default defineConfig({
   webServer: remoteURL
     ? undefined
     : {
-        command: 'npm run build && npm run preview',
+        command: `npm run build && npm run preview -- --port ${PORT} --strictPort`,
         url: baseURL,
         reuseExistingServer: !process.env.CI,
         timeout: 180_000,
