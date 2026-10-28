@@ -4,8 +4,15 @@ import '@/styles/globals.css'
 
 async function enableMocking() {
   if (import.meta.env.VITE_ENABLE_MOCKS === 'false') return
-  const { worker } = await import('@/mocks/browser')
+  const [{ worker }, { installMockingKeepalive, reactivateMocking }, { configureTransportRecovery }] = await Promise.all([
+    import('@/mocks/browser'),
+    import('@/mocks/worker-recovery'),
+    import('@/lib/api'),
+  ])
   await worker.start({ onUnhandledRequest: 'bypass', quiet: import.meta.env.PROD })
+  // O navegador desliga o worker ocioso e ele volta sem saber desta aba (ver mocks/worker-recovery.ts)
+  installMockingKeepalive()
+  configureTransportRecovery({ recover: reactivateMocking })
 }
 
 const rootElement = document.getElementById('root')

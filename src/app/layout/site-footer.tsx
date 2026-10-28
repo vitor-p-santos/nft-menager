@@ -8,6 +8,7 @@ import twitter from '@/assets/icons/social-twitter.svg'
 import youtube from '@/assets/icons/social-youtube.svg'
 import { Skeleton } from '@/components/feedback/skeleton'
 import { Container } from '@/components/layout/container'
+import { Badge } from '@/components/ui/badge'
 import { CATALOG_SECTION_ID } from '@/entities/catalog'
 import { siteQueryOptions } from '@/features/home/api/queries'
 import type { SiteSettings } from '@/features/home/schemas/content'
@@ -170,11 +171,11 @@ export function SiteFooter() {
   return (
     <footer className="hidden pb-6 md:block">
       <Container>
-        <div className="flex flex-col gap-8 bg-card p-8 xl:h-[250px] xl:flex-row xl:items-stretch xl:justify-between xl:gap-0">
+        <div className="flex flex-col gap-8 bg-card p-8 laptop:h-[250px] laptop:flex-row laptop:items-stretch laptop:justify-between laptop:gap-0">
 
-          <ul className="grid grid-cols-3 xl:contents">
+          <ul className="grid grid-cols-3 laptop:contents">
             {FEATURES.map((f, i) => (
-              <li key={f.letter} className={`flex flex-col gap-3 px-4 xl:w-[264px] ${i === 0 ? 'xl:flex-1' : ''} ${i > 0 ? 'border-l border-primary' : ''}`}>
+              <li key={f.letter} className={`flex flex-col gap-3 px-4 laptop:w-[264px] ${i === 0 ? 'laptop:flex-1' : ''} ${i > 0 ? 'border-l border-primary' : ''}`}>
                 <span aria-hidden className="flex size-[74px] items-center justify-center rounded-full bg-primary text-heading font-bold text-primary-foreground">
                   {f.letter}
                 </span>
@@ -183,16 +184,19 @@ export function SiteFooter() {
               </li>
             ))}
           </ul>
-          <div className="px-4 xl:w-[357px] xl:border-l xl:border-primary">
+          <div className="px-4 laptop:w-[357px] laptop:border-l laptop:border-primary">
             <Suspense fallback={<div aria-hidden className="h-[124px]" />}>
               <NewsletterForm />
             </Suspense>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 items-center gap-6 bg-surface-dark p-8 xl:h-[88px] xl:grid-cols-[1fr_1fr_1fr_228px] xl:gap-[92px]">
+        {/* Figma: uma linha só, 88px, itens centrados na vertical. O layout do Figma vale a partir de 1280 (laptop);
+            de 1024 a 1279 a grade de 4 colunas com gap-8 alinha KURIO e o e-mail às 2 colunas de links de baixo.
+            No tablet (md) os itens ficam na largura natural; py-[22px] = (88 − 44) / 2 do texto de 2 linhas */}
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-4 bg-surface-dark px-8 py-[22px] lg:grid lg:h-[88px] lg:grid-cols-4 lg:py-0 laptop:grid-cols-[1fr_1fr_1fr_228px] laptop:gap-[92px]">
           <span className="text-body font-bold tracking-[0.1em] text-foreground">KURIO</span>
-          <p className="text-body leading-[22px] text-foreground">
+          <p className="text-body leading-[22px] whitespace-nowrap text-foreground">
             Feito para colecionadores,
             <br />
             criadores e cultura
@@ -200,7 +204,7 @@ export function SiteFooter() {
           <ContactLinks />
         </div>
 
-        <div className="grid grid-cols-2 gap-8 bg-card p-8 xl:h-[236px] xl:grid-cols-[1fr_1fr_1fr_228px] xl:gap-[124px]">
+        <div className="grid grid-cols-2 gap-8 bg-card p-8 laptop:h-[236px] laptop:grid-cols-[1fr_1fr_1fr_228px] laptop:gap-[124px]">
           {LINK_COLUMNS.map((column) => (
             <nav key={column.title} aria-label={column.title} className="flex flex-col gap-2">
               <h2 className="text-lead leading-4 font-bold text-foreground">{column.title}</h2>
@@ -220,9 +224,9 @@ export function SiteFooter() {
             </div>
             <div className="flex flex-col gap-3">
               <h2 className="text-lead leading-4 font-bold whitespace-nowrap text-foreground">Carteiras compatíveis</h2>
-              <p className="flex h-[26px] items-center justify-center rounded-md border border-border-soft bg-surface-dark pl-2 text-tiny leading-normal font-bold tracking-[0.1px] whitespace-pre text-text-accent">
-                {'METAMASK  •  WALLETCONNECT  •  COINBASE'}
-              </p>
+              <Badge asChild variant="seal" className="justify-center pr-0">
+                <p>{'METAMASK  •  WALLETCONNECT  •  COINBASE'}</p>
+              </Badge>
             </div>
           </div>
         </div>

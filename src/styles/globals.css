@@ -114,6 +114,8 @@
   /* Breakpoints do desafio: 390 (base), 768, 1440 */
   --breakpoint-md: 48rem;
   --breakpoint-xl: 90rem;
+  /* 1280: o container já chega aos 1200 do Figma; o footer desktop começa aqui, não em 1440 */
+  --breakpoint-laptop: 80rem;
 
   /* Sombras do Figma (detalhe do NFT) */
   --shadow-stepper: 0 6.6px 9.9px rgb(20 13 10 / 0.15); /* botões +/− desktop */

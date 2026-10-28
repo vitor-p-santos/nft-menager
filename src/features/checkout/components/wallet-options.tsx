@@ -1,8 +1,10 @@
 import { EllipsisVerticalIcon } from 'lucide-react'
 import { useId, useState } from 'react'
 import walletCoinbase from '@/assets/icons/wallet-coinbase.png'
+import { Badge } from '@/components/ui/badge'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { RadioGroup, RadioGroupItem, RadioIndicator } from '@/components/ui/radio-group'
 import { NETWORK_LABELS, type Network } from '@/entities/nft'
 import { shortAddress, WALLET_PROVIDER_LABELS, type Wallet, type WalletProvider } from '@/entities/wallet'
 import { cn } from '@/lib/utils'
@@ -15,25 +17,6 @@ export type WalletMenuActions = {
   setPrimary: (id: string) => Promise<unknown>
   remove: (id: string) => Promise<unknown>
   isPending: boolean
-}
-
-/**
- * Marca do radio (16px): anel de 1,5px com ponto central quando marcado. No mobile o anel vazio é
- * Color/Border Soft; no desktop, Color/Primary (cores medidas nos recortes m-04 e d-04).
- * O `<input>` real fica oculto (`peer`) e recebe o foco visível.
- */
-function RadioMark({ checked, tone }: { checked: boolean; tone: 'soft' | 'primary' }) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        'flex size-4 shrink-0 items-center justify-center rounded-full border-[1.5px]',
-        checked || tone === 'primary' ? 'border-primary' : 'border-border-soft',
-      )}
-    >
-      {checked && <span className="size-2 rounded-full bg-primary" />}
-    </span>
-  )
 }
 
 /** Rede no cartão mobile: "Rede principal Ethereum" (mainnet) e "Rede Polygon" (como no m-04). */
@@ -135,22 +118,20 @@ export function SavedWallets({ wallets, selectedId, onSelect, onSwitch, actions,
           Você ainda não tem carteiras salvas. Informe a carteira no perfil do colecionador abaixo.
         </p>
       ) : (
-        <div role="radiogroup" aria-labelledby={titleId} className="flex flex-col gap-5">
+        <RadioGroup aria-labelledby={titleId} className="flex flex-col gap-5">
           {wallets.map((wallet) => {
             const checked = wallet.id === selectedId
             return (
               <div key={wallet.id} className="relative flex min-h-[93px] items-center rounded-2xl bg-card">
                 <label className="flex flex-1 cursor-pointer items-center gap-[19px] py-3.5 pr-12 pl-[19px]">
-                  <input
-                    type="radio"
+                  <RadioGroupItem
                     name="checkout-saved-wallet"
                     value={wallet.id}
                     checked={checked}
                     onChange={() => onSelect(wallet)}
-                    className="peer sr-only"
                   />
                   <span className="rounded-full peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ring">
-                    <RadioMark checked={checked} tone="soft" />
+                    <RadioIndicator checked={checked} tone="soft" />
                   </span>
                   <span className="flex min-w-0 flex-col">
                     <span className="text-body-lg leading-6 font-bold text-foreground">{wallet.label}</span>
@@ -166,7 +147,7 @@ export function SavedWallets({ wallets, selectedId, onSelect, onSwitch, actions,
               </div>
             )
           })}
-        </div>
+        </RadioGroup>
       )}
       <output aria-live="polite" className={cn('text-body leading-5 empty:hidden', feedback?.error ? 'text-destructive' : 'text-text-secondary')}>
         {feedback?.message}
@@ -227,8 +208,7 @@ export function ProviderOptions({ variant, value, onChange, error }: ProviderOpt
       >
         Carteira e rede
       </h2>
-      <div
-        role="radiogroup"
+      <RadioGroup
         aria-labelledby={titleId}
         aria-describedby={error ? errorId : undefined}
         aria-invalid={error ? true : undefined}
@@ -237,14 +217,7 @@ export function ProviderOptions({ variant, value, onChange, error }: ProviderOpt
         {PROVIDER_ORDER.map((provider) => {
           const checked = value === provider
           const input = (
-            <input
-              type="radio"
-              name={name}
-              value={provider}
-              checked={checked}
-              onChange={() => onChange(provider)}
-              className="peer sr-only"
-            />
+            <RadioGroupItem name={name} value={provider} checked={checked} onChange={() => onChange(provider)} />
           )
           if (variant === 'mobile') {
             return (
@@ -253,7 +226,7 @@ export function ProviderOptions({ variant, value, onChange, error }: ProviderOpt
                 <ProviderIcon provider={provider} />
                 <span className="flex-1 text-body leading-5 text-foreground">{WALLET_PROVIDER_LABELS[provider]}</span>
                 <span className="rounded-full peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ring">
-                  <RadioMark checked={checked} tone="soft" />
+                  <RadioIndicator checked={checked} tone="soft" />
                 </span>
               </label>
             )
@@ -267,13 +240,13 @@ export function ProviderOptions({ variant, value, onChange, error }: ProviderOpt
               )}
             >
               {input}
-              <RadioMark checked={checked} tone="primary" />
+              <RadioIndicator checked={checked} tone="primary" />
               {provider === 'walletconnect' ? (
-                <span className="flex h-[26px] items-center rounded-md border border-border-soft bg-surface-dark px-2 text-tiny leading-normal font-bold tracking-[0.1px] whitespace-pre text-text-accent">
+                <Badge variant="seal">
                   <span className="sr-only">WalletConnect: </span>
                   <span aria-hidden>{'METAMASK  •  WALLETCONNECT  •  COINBASE'}</span>
                   <span className="sr-only">MetaMask, WalletConnect ou Coinbase</span>
-                </span>
+                </Badge>
               ) : (
                 <span className="text-body-md leading-5 text-foreground">
                   {WALLET_PROVIDER_LABELS[provider]}
@@ -282,7 +255,7 @@ export function ProviderOptions({ variant, value, onChange, error }: ProviderOpt
             </label>
           )
         })}
-      </div>
+      </RadioGroup>
       {error && (
         <p id={errorId} className="text-caption leading-4 text-destructive">
           {error}

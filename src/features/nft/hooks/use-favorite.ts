@@ -19,7 +19,9 @@ export type FavoriteFeedback = { message: string; loginRedirect?: string }
  * (que volta à rota de origem), o primeiro botão do mesmo NFT a montar com sessão conclui a ação.
  */
 export function useFavorite(nftId: string, nftName: string) {
-  const favorites = useQuery(favoritesQueries.list())
+  const user = useCurrentUser()
+  // Sem sessão não há lista a buscar (a API responderia 401 em todo card); o 401 do clique vem da mutation
+  const favorites = useQuery({ ...favoritesQueries.list(), enabled: user !== null })
   const toggle = useToggleFavorite()
   const href = useRouterState({ select: (state) => state.location.href })
   const [feedback, setFeedback] = useState<FavoriteFeedback | null>(null)
@@ -41,7 +43,6 @@ export function useFavorite(nftId: string, nftName: string) {
   // Espera a lista de favoritos da conta nova chegar: logo depois do login o `resetUserData` cancela e
   // reseta as queries privadas (a lista inclusive). Um PUT disparado antes disso teria o update otimista
   // apagado pelo reset e o botão piscaria "não favoritado" até a invalidação final.
-  const user = useCurrentUser()
   const favoritesReady = favorites.isSuccess && !favorites.isFetching
   const mutateFavorite = toggle.mutate
   useEffect(() => {

@@ -1,9 +1,9 @@
 import type { UseFormReturn } from 'react-hook-form'
+import { Checkbox } from '@/components/ui/checkbox'
+import { InputField, SelectField, TextareaField } from '@/components/ui/form-field'
 import { NETWORK_LABELS, networkSchema } from '@/entities/nft'
 import { WALLET_PROVIDER_LABELS, WALLET_PROVIDERS } from '@/entities/wallet'
-import { cn } from '@/lib/utils'
 import type { CollectorFormValues, CollectorInput } from '../schemas/checkout'
-import { InputField, SelectField, TextareaField } from '@/components/ui/form-field'
 
 const NETWORK_OPTIONS = networkSchema.options.map((value) => ({ value, label: NETWORK_LABELS[value] }))
 const PROVIDER_OPTIONS = WALLET_PROVIDERS.map((value) => ({ value, label: WALLET_PROVIDER_LABELS[value] }))
@@ -88,19 +88,8 @@ export function CollectorFields({ form, useOtherWallet, onUseOtherWalletChange, 
 
       {hasSavedWallet && (
         <label className="flex w-fit cursor-pointer items-center gap-2 pt-3 md:col-span-2">
-          <input
-            type="checkbox"
-            checked={useOtherWallet}
-            onChange={(event) => onUseOtherWalletChange(event.target.checked)}
-            className="peer sr-only"
-          />
           {/* Figma: círculo âmbar de 16px (o toggle usa semântica de checkbox) */}
-          <span
-            aria-hidden
-            className="flex size-4 items-center justify-center rounded-full border-[1.5px] border-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ring"
-          >
-            <span className={cn('size-2 rounded-full bg-primary', !useOtherWallet && 'hidden')} />
-          </span>
+          <Checkbox checked={useOtherWallet} onChange={(event) => onUseOtherWalletChange(event.target.checked)} />
           <span className="text-body-md leading-4 text-foreground">Usar outra carteira?</span>
         </label>
       )}

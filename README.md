@@ -4,7 +4,7 @@ Marketplace de NFTs da marca Kurio, implementado a partir do Figma do desafio co
 
 Não há servidor real: a API REST e o Socket.IO são simulados no navegador pelo MSW (`@mswjs/socket.io-binding` para o tempo real), inclusive no deploy.
 
-**URL pública:** (pendente)
+**URL pública:** <https://nft-marketplace-ten-weld.vercel.app>
 
 Status das tarefas em [`TASKS.md`](TASKS.md). Revisão dos requisitos contra o código em [`reports/REQUIREMENTS.md`](reports/REQUIREMENTS.md).
 
@@ -35,6 +35,8 @@ npm run dev -- --port 5180   # http://localhost:5180
 | `npm run images` | Gera as variantes AVIF/WebP (128 a 960 px) dos PNGs de `public/images/nfts` em `public/images/nfts/opt/` e o manifesto `src/lib/image/manifest.gen.ts` (sharp) |
 
 O Playwright sobe sozinho `npm run build && npm run preview` (porta 4173) e reaproveita um preview já em execução fora do CI. Se o preview estiver servindo um `dist/` antigo, encerre-o antes de rodar os testes.
+
+**CI:** `.github/workflows/ci.yml` roda `check`, a suíte Playwright e o Lighthouse (falha se a mediana de CLS passar de 0,1) em todo PR e push na `main`; os relatórios ficam como artefatos do run.
 
 ### Variáveis de ambiente (`.env.example`)
 | Variável | Padrão | Uso |
@@ -147,11 +149,8 @@ reports/        REQUIREMENTS.md, playwright/ e lighthouse/
 - **Pagamento e carteiras simulados:** não há assinatura de transação nem conexão com MetaMask, WalletConnect ou Coinbase. O `txHash` é gerado pelo mock, e o link "Ver no Etherscan" aponta para um hash inexistente.
 - **Bundle:** o MSW (~495 kB) fica no caminho crítico porque ele é a API. Os chunks são baixados em paralelo (ver `ARCHITECTURE.md`, Performance).
 - **Fora do escopo ou incompleto** (lista completa em [`reports/REQUIREMENTS.md`](reports/REQUIREMENTS.md)):
-  - "Lista de interesse" (tela de favoritos) e "Minha coleção" aparecem como "Disponível em breve". Favoritar funciona nos cards e no detalhe.
+  - "Minha coleção" aparece como "Disponível em breve". Os favoritos ficam em "Lista de interesse" (`/perfil/lista-de-interesse`).
   - "Ofertas", "Arquivos baixados" e "Suporte" do menu do perfil ficam ocultos (decisão D-06).
-  - Sem testes e2e de perfil/carteiras nem do tempo real.
-  - Relatório Lighthouse ainda não gerado; o script audita só a página inicial (`lighthouse/pages.json`).
-  - Deploy público pendente.
 - Divergências pontuais do Figma (assets provisórios, telas sem frame) estão listadas por fase no `ARCHITECTURE.md`.
 
 ## Documentação
@@ -159,10 +158,13 @@ reports/        REQUIREMENTS.md, playwright/ e lighthouse/
 - Contratos: [REST](specs/001-nft-marketplace/contracts/rest-api.md) e [eventos Socket.IO](specs/001-nft-marketplace/contracts/socket-events.md)
 - [`specs/001-nft-marketplace/`](specs/001-nft-marketplace/): [spec](specs/001-nft-marketplace/spec.md), [plano](specs/001-nft-marketplace/plan.md), [pesquisa e decisões](specs/001-nft-marketplace/research.md), [modelo de dados](specs/001-nft-marketplace/data-model.md), [inventário de design](specs/001-nft-marketplace/design-inventory.md)
 - [`.specify/memory/constitution.md`](.specify/memory/constitution.md): princípios do projeto
-- [`reports/`](reports/): [revisão de requisitos](reports/REQUIREMENTS.md), relatório do Playwright (`reports/playwright/index.html`) e do Lighthouse (`reports/lighthouse/SUMMARY.md`, quando gerado)
+- [`reports/`](reports/): [revisão de requisitos](reports/REQUIREMENTS.md), relatório do Playwright (`reports/playwright/index.html`) e do Lighthouse (`reports/lighthouse/SUMMARY.md`)
 - [`TASKS.md`](TASKS.md): checklist com status verificado
 
 ## Deploy
-Configurado para a Vercel (`vercel.json`): `npm run build`, saída em `dist/` e rewrite de SPA que preserva `mockServiceWorker.js` e `assets/`. O MSW também roda em produção e serve os dados.
+Publicado na Vercel: **<https://nft-marketplace-ten-weld.vercel.app>**
 
-**URL pública:** (pendente)
+- `vercel.json`: `npm run build`, saída em `dist/` e rewrite de SPA que preserva `mockServiceWorker.js` e `assets/`. O MSW também roda em produção e serve os dados.
+- `.vercelignore`: o upload deixa de fora o que não entra no build (`reports`, `design`, `dist` local, worktrees em `.claude`).
+- Novo deploy de produção: `npx vercel deploy --prod` (exige `vercel login`). As URLs `*-vitors-projects-*.vercel.app` têm a proteção de deploy da Vercel; a URL pública é o alias acima.
+- Para rodar a suíte contra o site publicado: `PLAYWRIGHT_BASE_URL=https://nft-marketplace-ten-weld.vercel.app npx playwright test` (sem preview local).

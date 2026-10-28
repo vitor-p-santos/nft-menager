@@ -1,0 +1,68 @@
+# Verificações do projeto (CLAUDE.md → Testes e auditorias): check, Playwright (e2e, a11y, visual) e
+# Lighthouse (3 execuções por página × mobile/desktop). Os relatórios ficam como artefatos do run.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npx tsc -p tsconfig.e2e.json --noEmit
+
+  playwright:
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: |
+            reports/playwright
+            test-results
+          retention-days: 14
+
+  lighthouse:
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # lighthouse/run.mjs usa o Chromium do Playwright (CHROME_PATH) e falha se o CLS passar do orçamento
+      - run: npx playwright install --with-deps chromium
+      - run: npm run lighthouse
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: lighthouse-report
+          path: reports/lighthouse
+          retention-days: 14

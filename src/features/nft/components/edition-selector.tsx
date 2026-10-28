@@ -1,10 +1,11 @@
 import { useId } from 'react'
+import { RadioGroupItem } from '@/components/ui/radio-group'
 import { EDITION_LABELS, type Edition, type Nft } from '@/entities/nft'
 import { cn } from '@/lib/utils'
 
 /**
  * Edições em pílulas elípticas (Figma: elipses de 28px com traço de 1px Color/Border; ativa em
- * Color/Primary com Body/14 Medium âmbar). Radios nativos: setas do teclado e leitores de tela
+ * Color/Primary com Body/14 Medium âmbar). Radios nativos (`RadioGroupItem`): setas do teclado e leitores de tela
  * funcionam sem script. Edição esgotada fica desabilitada.
  */
 export function EditionSelector({
@@ -37,14 +38,12 @@ export function EditionSelector({
                 soldOut ? 'cursor-not-allowed line-through opacity-50' : 'cursor-pointer',
               )}
             >
-              <input
-                type="radio"
+              <RadioGroupItem
                 name={name}
                 value={edition}
                 checked={checked}
                 disabled={soldOut}
                 onChange={() => onChange(edition)}
-                className="sr-only"
               />
               {EDITION_LABELS[edition]}
               <span className="sr-only">{soldOut ? ' (esgotada)' : ` (${available} disponíveis)`}</span>

@@ -1,0 +1,8 @@
+# Fora do build da Vercel (o build roda lá: npm run build → dist/)
+.claude
+dist
+reports
+test-results
+design
+lighthouse
+C:*

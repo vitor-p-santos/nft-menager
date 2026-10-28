@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test'
 import { expect, test } from '../fixtures/app'
+import { ANA, openPrivateAs } from '../fixtures/auth'
 import { buyFromDetail, patchMockNft } from '../fixtures/cart'
 
 /*
@@ -20,6 +21,8 @@ test('quantidade, cupom, refresh e remoção', async ({ page }) => {
   await page.getByRole('button', { name: `Aumentar quantidade de ${NFT.name}` }).filter({ visible: true }).click()
   const summary = page.getByRole('region', { name: 'Resumo da carteira' })
   await expect(summary.getByText('2.78 ETH')).toBeVisible()
+  // Sem sessão o checkout pede login: o botão diz "Conectar e finalizar"
+  await expect(summary.getByRole('link', { name: 'Conectar e finalizar', exact: true })).toBeVisible()
 
   // Cupom: inválido mostra erro no campo; válido aplica desconto de 10%
   const coupon = summary.getByPlaceholder('Digite o código promocional...')
@@ -39,6 +42,15 @@ test('quantidade, cupom, refresh e remoção', async ({ page }) => {
 
   await page.getByRole('button', { name: `Remover ${NFT.name} do carrinho` }).filter({ visible: true }).click()
   await expect(page.getByText('Seu carrinho está vazio')).toBeVisible()
+})
+
+test('com sessão o botão do resumo diz só "Finalizar"', async ({ page }) => {
+  test.slow() // login + detalhe → carrinho
+  await openPrivateAs(page, '/perfil', ANA)
+  await buyFromDetail(page, NFT.id)
+  const summary = page.getByRole('region', { name: 'Resumo da carteira' })
+  await expect(summary.getByRole('link', { name: 'Finalizar', exact: true })).toHaveAttribute('href', '/checkout')
+  await expect(summary.getByText('Conectar e finalizar')).toHaveCount(0)
 })
 
 test('preço alterado no servidor é sinalizado no item', async ({ page }, testInfo) => {

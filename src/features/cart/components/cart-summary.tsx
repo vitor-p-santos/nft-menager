@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { Skeleton } from '@/components/feedback/skeleton'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { CATALOG_SECTION_ID } from '@/entities/catalog'
+import { useCurrentUser } from '@/entities/session'
 import { ApiError } from '@/lib/api'
 import { formatEthLabel } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -111,7 +112,7 @@ function CouponForm({ cart }: { cart: Cart }) {
   )
 }
 
-/** "Conectar e finalizar": pílula em gradiente de 60px no mobile, botão âmbar de 40px no desktop. */
+/** "Conectar e finalizar" (sem sessão) ou "Finalizar" (com sessão): pílula em gradiente de 60px no mobile, botão âmbar de 40px no desktop. */
 const checkoutClass = cn(
   'flex w-full items-center justify-center font-bold text-primary-foreground',
   'h-[60px] rounded-[40px] bg-[image:var(--gradient-checkout)] text-body-lg',
@@ -134,6 +135,8 @@ function Row({ label, value, className }: { label: string; value: string; classN
 export function CartSummary({ cart }: { cart: Cart }) {
   const { totals } = cart
   const hasUnavailable = cart.items.some((i) => i.issue === 'unavailable')
+  // Quem já entrou não precisa "conectar": o rótulo do Figma fica só para o visitante
+  const checkoutLabel = useCurrentUser() ? 'Finalizar' : 'Conectar e finalizar'
 
   return (
     <section
@@ -180,11 +183,11 @@ export function CartSummary({ cart }: { cart: Cart }) {
             aria-describedby="resumo-aviso"
             className={cn(checkoutClass, 'cursor-not-allowed opacity-50')}
           >
-            Conectar e finalizar
+            {checkoutLabel}
           </button>
         ) : (
           <Link to="/checkout" className={checkoutClass}>
-            Conectar e finalizar
+            {checkoutLabel}
           </Link>
         )}
         {hasUnavailable && (

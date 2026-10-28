@@ -37,6 +37,10 @@ Revisão final dos requisitos contra o código, com o que ficou faltando: [`repo
 
 Os ciclos de import são barrados pelo lint (`import/no-cycle`).
 
+## Componentes base (T-021)
+
+`src/components/ui` tem `Input`, `Select`, `Checkbox`, `RadioGroup`/`RadioGroupItem`/`RadioIndicator` e `Badge` com as classes que as telas já usavam (medidas do Figma), sem mudança visual (comparado pixel a pixel em 390/768/1440). Todos ficam sobre **controles nativos**, e não sobre os primitivos do Radix: `Select` segue o padrão "native select" do shadcn (`selectOption` e o teclado do sistema continuam valendo) e checkbox/radio são `<input>` ocultos (`peer sr-only`) com o indicador desenhado ao lado. Assim, `getByLabel`, `getByRole('radio'|'checkbox')` e `.check()` seguem funcionando, e cada tela continua desenhando a opção do jeito que o Figma pede (cartão de carteira, pílula de edição). `form-field.tsx` compõe `Input`/`Select`; o `Badge` cobre o "RARO" do card, o selo de carteiras (checkout e footer) e o estado do pedido. O lint reconhece esses componentes como controles de `<label>` (`jsx-a11y/label-has-associated-control` → `controlComponents`).
+
 ## Fluxo de dados
 - **Leitura:** a rota chama `ensureQueryData(xQueries.detail(id))` no loader, e o componente usa `useSuspenseQuery`/`useQuery` com as mesmas `queryOptions`.
 - **Escrita:** `useMutation` → `onSuccess` faz `setQueryData` com a resposta do servidor e invalida as keys relacionadas.
@@ -220,11 +224,18 @@ Os ciclos de import são barrados pelo lint (`import/no-cycle`).
 | R-6 | Não há backend real: cada navegador tem o próprio banco (`localStorage`) e cada aba o próprio MSW | Banco versionado (`SCHEMA_VERSION`); eventos repassados entre abas por `BroadcastChannel`; o servidor simulado deriva o usuário do token |
 | R-7 | Pagamento e carteiras são simulados (sem MetaMask/WalletConnect/Coinbase reais) | O resultado do pagamento sai do mock (`payment.outcome`); o `txHash` é gerado e o link do explorador aponta para um hash inexistente |
 
+## Testes, auditorias e CI (Fase 9)
+- **Playwright** contra o build de produção (MSW ativo) em 390/768/1440: e2e por fluxo (`tests/e2e`), axe (`tests/a11y`: WCAG 2.1 AA, barra `serious`/`critical`) e baselines visuais (`tests/visual`). Tempo real é testado pelos gatilhos do servidor simulado (`window.__mockRealtime`, contrato repetido em `tests/fixtures/realtime.ts`). Última rodada: 69 passed / 0 failed / 42 skipped (os skips são por viewport).
+- **Lighthouse** (`npm run lighthouse`): 3 execuções × `/`, detalhe e carrinho × mobile/desktop; medianas em `reports/lighthouse/SUMMARY.md`. O script falha se a mediana de CLS passar de 0,1 e preserva a seção "Análise" ao regravar a tabela.
+- **CI** (`.github/workflows/ci.yml`): `check` → Playwright e Lighthouse em paralelo, com os relatórios como artefatos.
+- **Menu da conta (WCAG 2.5.3):** sem foto, o gatilho do header mostra as iniciais; o nome acessível passa a contê-las ("Conta de Ana Ribeiro, AR"). Vírgula e não parênteses: o axe descarta o texto entre parênteses na comparação.
+- **Footer:** o layout desktop do Figma começa em **1280** (breakpoint `laptop`, 80rem, em `globals.css`), e não no `xl` de 1440: em 1280 o container já tem os 1200 px do Figma, e só as margens laterais mudam. A faixa KURIO/contato tem 88 px e itens centrados em todas as larguras; de 1024 a 1279 ela usa 4 colunas com `gap-8`, alinhando KURIO e o e-mail às 2 colunas de links de baixo.
+
+- **Deploy (T-104):** Vercel, <https://nft-marketplace-ten-weld.vercel.app>. O MSW roda em produção. O `.vercelignore` deixa de fora do upload o que não entra no build. A suíte aceita `PLAYWRIGHT_BASE_URL` para rodar contra o site publicado (sem preview local); ela passou completa contra a URL.
+- **Favoritos sem sessão:** `useFavorite` só busca `GET /me/favorites` com usuário na sessão. Antes, todo card e detalhe disparava um 401 para o visitante (achado pela varredura de console no site publicado); o 401 do clique continua vindo da mutation, que grava a ação pendente.
+- **Worker do MSW desligado por ociosidade:** o navegador desliga o service worker ocioso (aba em segundo plano, onde o keepalive do MSW é estrangulado). Ele volta sem a lista em memória das abas que ativaram o mock (`activeClientIds` em `mockServiceWorker.js`) e deixa a `/api` ir para a rede. No deploy isso vira o `index.html` do rewrite ou um 404/405 do host, e o app mostrava carrinho vazio, "não encontrado" e falha no login. Correção em duas camadas, sem editar o `mockServiceWorker.js` (regenerado pelo `msw init`): (1) `mocks/worker-recovery.ts` reenvia `MOCK_ACTIVATE` (idempotente no worker) a cada 5 s, ao voltar a aba e no `focus`; (2) `lib/api` trata como fora do contrato um sucesso com corpo que não seja JSON ou um erro sem JSON (a API sempre responde JSON, e só 202/204 vêm vazios). Nesse caso reativa o worker (`configureTransportRecovery`, registrado só quando o MSW está ligado) e repete a requisição uma vez; se não der, o erro é `unavailable`, e não um "não encontrado" falso. Coberto por `tests/e2e/mock-worker.spec.ts`: para o worker via CDP, sem keepalive, e falha sem a correção.
+- **Rótulo do checkout no carrinho:** "Conectar e finalizar" (Figma) só para o visitante; com sessão o botão diz "Finalizar".
+
 ## Pendências na entrega
 Levantadas na revisão final (T-105); detalhes e evidências em [`reports/REQUIREMENTS.md`](reports/REQUIREMENTS.md).
-- Deploy público (T-104) e URL no README.
-- Relatório Lighthouse (T-102). O `lighthouse/pages.json` só audita `/`, e não há execução em CI.
-- Relatório do Playwright atualizado para a entrega (T-103). Hoje o `.gitignore` ignora `reports/playwright`.
-- Testes e2e do tempo real (T-095) e de perfil/carteiras (T-088).
-- Tela de "Lista de interesse" (favoritos) e "Minha coleção": continuam "Disponível em breve" no menu do perfil, na tab bar e no rodapé.
-- Auditoria axe em checkout, pedido, atividade, perfil e carteiras.
+- "Minha coleção" continua "Disponível em breve" (fora do spec).

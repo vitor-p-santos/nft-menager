@@ -127,8 +127,10 @@ export function CartPage({ related }: { related?: (cart: Cart) => ReactNode }) {
     )
   }
 
+  // min-h-dvh em todos os breakpoints: o skeleton (carrinho cheio) é mais alto que o estado vazio;
+  // sem a reserva, o rodapé sobe para dentro da viewport quando o carrinho chega vazio (CLS 0,17 no desktop)
   return (
-    <Container className="flex flex-col gap-5 pt-[30px] max-md:min-h-dvh md:gap-3 md:pt-0">
+    <Container className="flex min-h-dvh flex-col gap-5 pt-[30px] md:gap-3 md:pt-0">
       <Heading />
       {content}
     </Container>

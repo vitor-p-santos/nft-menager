@@ -1,17 +1,14 @@
 import { EyeIcon, EyeOffIcon } from 'lucide-react'
 import { useId, useState, type ComponentProps, type ReactNode } from 'react'
-import chevronDown from '@/assets/icons/chevron-down.svg'
 import { cn } from '@/lib/utils'
+import { controlClass, Input } from './input'
+import { Select, SelectOption } from './select'
 
 /**
- * Campos de formulário do app (checkout, perfil e carteiras). Medidas do "Perfil do colecionador"
- * (Figma Checkout Page `70522:3321`, recorte d-04), as mesmas de Desktop/Perfil e Carteiras (d-08/d-09):
- * rótulo Body/15 com asterisco de obrigatório, controle de 40px com borda Color/Border de 1px,
- * raio de 4px, fundo Ink e placeholder Color/Secondary.
+ * Campos de formulário do app (checkout, perfil e carteiras): rótulo Body/15 com asterisco de
+ * obrigatório + controle base (`Input`/`Select`, medidas do Figma em `input.tsx`) + dica e erro,
+ * ligados ao controle por `aria-describedby`/`aria-invalid`.
  */
-export const controlClass =
-  'h-10 w-full min-w-0 rounded-sm border border-border bg-background px-3 text-body leading-4 text-foreground placeholder:text-secondary transition-colors focus-visible:border-primary focus-visible:outline-none aria-[invalid=true]:border-destructive disabled:cursor-not-allowed disabled:opacity-60'
-
 type FieldShellProps = {
   label: string
   /** Rótulo visualmente oculto (campo sem rótulo no Figma, ex.: "ENS ou carteira secundária"). */
@@ -71,12 +68,12 @@ export function InputField({ label, hideLabel, required, error, hint, className,
       {({ id, describedBy, invalid }) =>
         suffix ? (
           <div className="relative">
-            <input
+            <Input
               id={id}
               aria-invalid={invalid || undefined}
               aria-describedby={describedBy}
               aria-required={required || undefined}
-              className={cn(controlClass, 'pr-14', inputClassName)}
+              className={cn('pr-14', inputClassName)}
               {...props}
             />
             <span aria-hidden className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-body-lg text-foreground">
@@ -84,12 +81,12 @@ export function InputField({ label, hideLabel, required, error, hint, className,
             </span>
           </div>
         ) : (
-          <input
+          <Input
             id={id}
             aria-invalid={invalid || undefined}
             aria-describedby={describedBy}
             aria-required={required || undefined}
-            className={cn(controlClass, inputClassName)}
+            className={inputClassName}
             {...props}
           />
         )
@@ -104,37 +101,28 @@ type SelectFieldProps = Omit<ComponentProps<'select'>, 'id' | 'className' | 'chi
     options: readonly { value: string; label: string }[]
   }
 
-/** Select nativo (teclado e leitores de tela de graça) com a seta "Arrow - Down 2" do Figma. */
+/** Select nativo (`Select`) com a opção-placeholder desabilitada. */
 export function SelectField({ label, required, error, className, placeholder, options, ...props }: SelectFieldProps) {
   return (
     <FieldShell label={label} required={required} error={error} className={className}>
       {({ id, describedBy, invalid }) => (
-        <div className="relative">
-          <select
-            id={id}
-            aria-invalid={invalid || undefined}
-            aria-describedby={describedBy}
-            aria-required={required || undefined}
-            className={cn(controlClass, 'cursor-pointer appearance-none pr-10 invalid:text-secondary')}
-            required={required}
-            {...props}
-          >
-            <option value="" disabled>
-              {placeholder}
-            </option>
-            {options.map((option) => (
-              <option key={option.value} value={option.value} className="text-foreground">
-                {option.label}
-              </option>
-            ))}
-          </select>
-          {/* Seta na cor do placeholder (Color/Secondary): o SVG do Figma vira máscara */}
-          <span
-            aria-hidden
-            style={{ maskImage: `url("${chevronDown}")` }}
-            className="pointer-events-none absolute top-1/2 right-[30px] h-1.5 w-[11px] -translate-y-1/2 bg-secondary [mask-repeat:no-repeat] [mask-size:100%_100%]"
-          />
-        </div>
+        <Select
+          id={id}
+          aria-invalid={invalid || undefined}
+          aria-describedby={describedBy}
+          aria-required={required || undefined}
+          required={required}
+          {...props}
+        >
+          <option value="" disabled>
+            {placeholder}
+          </option>
+          {options.map((option) => (
+            <SelectOption key={option.value} value={option.value}>
+              {option.label}
+            </SelectOption>
+          ))}
+        </Select>
       )}
     </FieldShell>
   )
@@ -172,13 +160,13 @@ export function PasswordField({ label, required, error, className, ...props }: P
     <FieldShell label={label} required={required} error={error} className={className}>
       {({ id, describedBy, invalid }) => (
         <div className="relative">
-          <input
+          <Input
             id={id}
             type={visible ? 'text' : 'password'}
             aria-invalid={invalid || undefined}
             aria-describedby={describedBy}
             aria-required={required || undefined}
-            className={cn(controlClass, 'pr-12')}
+            className="pr-12"
             {...props}
           />
           <button

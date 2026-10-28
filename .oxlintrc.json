@@ -23,7 +23,13 @@
     ],
     "typescript/no-explicit-any": "error",
     "typescript/consistent-type-imports": "error",
-    "import/no-cycle": "error"
+    "import/no-cycle": "error",
+    "jsx-a11y/label-has-associated-control": [
+      "warn",
+      {
+        "controlComponents": ["Input", "Select", "Checkbox", "RadioGroupItem"]
+      }
+    ]
   },
   "overrides": [
     {

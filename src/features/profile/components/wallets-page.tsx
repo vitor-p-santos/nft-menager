@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useId, useState } from 'react'
 import { Skeleton } from '@/components/feedback/skeleton'
 import { ErrorState } from '@/components/feedback/states'
+import { Checkbox } from '@/components/ui/checkbox'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { NETWORK_LABELS } from '@/entities/nft'
 import { useCurrentUser, type User } from '@/entities/session'
@@ -213,21 +214,13 @@ function WalletsContent({ user, wallets }: { user: User; wallets: Wallet[] }) {
           </div>
           <div className="flex items-center gap-2">
             <label className={cn('flex items-center gap-2', primary ? 'cursor-pointer' : 'cursor-not-allowed opacity-50')}>
-              <input
-                type="checkbox"
+              {/* Figma: círculo âmbar de 16px (semântica de checkbox, como "Usar outra carteira?" no checkout) */}
+              <Checkbox
                 checked={sameAsPrimary}
                 disabled={!primary}
                 onChange={(event) => setSameAsPrimary(event.target.checked)}
                 aria-describedby={`${id}-igual-dica`}
-                className="peer sr-only"
               />
-              {/* Figma: círculo âmbar de 16px (semântica de checkbox, como "Usar outra carteira?" no checkout) */}
-              <span
-                aria-hidden
-                className="flex size-4 items-center justify-center rounded-full border-[1.5px] border-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ring"
-              >
-                <span className={cn('size-2 rounded-full bg-primary', !sameAsPrimary && 'hidden')} />
-              </span>
               <span className="text-body leading-5 text-foreground">Igual à carteira principal</span>
             </label>
             <span id={`${id}-igual-dica`} className="sr-only">
