@@ -7,6 +7,16 @@ import { expect, test } from '../fixtures/app'
  * do header (md+), já com os erros de validação visíveis. Sem violações sérias/críticas.
  */
 async function seriousViolations(page: Page, label: string) {
+  // No meio de uma transição de cor (ex.: troca de aba do modal) o axe mede a cor intermediária e acusa
+  // color-contrast de forma intermitente; audita o estado final. Animações infinitas (spinner) não contam.
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((a) => a.effect?.getComputedTiming().endTime !== Infinity)
+        .map((a) => a.finished.catch(() => undefined)),
+    ),
+  )
   const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze()
   return violations.filter((v) => v.impact === 'serious' || v.impact === 'critical').map((v) => `${label}: ${v.id}`)
 }
