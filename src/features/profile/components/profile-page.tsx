@@ -24,7 +24,7 @@ import {
 import { AvatarField } from './avatar-field'
 
 const PROFILE_FIELDS = ['displayName', 'username', 'email', 'ensName', 'walletNickname'] as const
-const PASSWORD_FIELDS = ['currentPassword', 'newPassword'] as const
+const PASSWORD_FIELDS = ['currentPassword', 'newPassword', 'confirmPassword'] as const
 
 const sectionTitle = 'text-body-md leading-5 font-bold text-foreground'
 
@@ -80,7 +80,7 @@ function ProfileForms({ profile }: { profile: Profile }) {
       // Foco no primeiro campo com erro (dados primeiro, depois senha)
       const firstProfile = PROFILE_FIELDS.find((field) => profileForm.getFieldState(field).error)
       if (firstProfile) profileForm.setFocus(firstProfile)
-      else passwordForm.setFocus((['currentPassword', 'newPassword', 'confirmPassword'] as const).find((f) => passwordForm.getFieldState(f).error) ?? 'currentPassword')
+      else passwordForm.setFocus(PASSWORD_FIELDS.find((field) => passwordForm.getFieldState(field).error) ?? 'currentPassword')
       return
     }
 

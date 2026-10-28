@@ -8,9 +8,8 @@ import { Container } from '@/components/layout/container'
 import { Button } from '@/components/ui/button'
 import { ResponsiveImage } from '@/components/ui/responsive-image'
 import { CATALOG_SECTION_ID } from '@/entities/catalog'
-import { MD_QUERY, useMediaQuery } from '@/lib/use-media-query'
+import { MD_QUERY, useMediaQuery, usePrefersReducedMotion } from '@/lib/use-media-query'
 import { cn } from '@/lib/utils'
-import { usePrefersReducedMotion } from '../hooks/use-reduced-motion'
 import type { HeroSlide } from '../schemas/content'
 
 const AUTOPLAY_MS = 6_000
@@ -152,7 +151,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
               width={138}
               height={138}
               loading={desktop ? 'lazy' : 'eager'}
-              className="absolute top-2.5 right-4 aspect-square w-[35%] max-w-[138px] rounded-[15px] object-cover"
+              className="absolute top-2.5 right-4 aspect-square w-[35%] max-w-[138px] rounded-xl object-cover"
             />
             <ResponsiveImage
               src={slide.secondaryImage.src}

@@ -8,8 +8,7 @@ import {
   type PasswordResetFormValues,
   type PasswordResetInput,
 } from '../schemas/auth'
-import { AuthField, AuthFormError, type AuthVariant } from './auth-field'
-import { AuthSubmit } from './login-form'
+import { AuthField, AuthFormError, AuthSubmit, type AuthVariant } from './auth-field'
 
 /**
  * "Esqueceu a senha?" (D-07): não há tela no Figma; é derivado do login (mesmo campo e botão).

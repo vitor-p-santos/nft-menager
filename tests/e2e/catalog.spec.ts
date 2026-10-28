@@ -74,6 +74,8 @@ test('erro, skeleton e busca vazia (D-04)', async ({ page, mockScenarios }, test
   await page.getByRole('button', { name: 'Abrir busca' }).click()
   await page.getByRole('searchbox', { name: 'Buscar NFTs' }).fill('zzzz')
   await page.keyboard.press('Enter')
+  // O campo fecha e o foco volta ao botão que abriu a busca
+  await expect(page.getByRole('button', { name: 'Abrir busca' })).toBeFocused()
   await expect(catalogRegion(page).getByText('Nenhum NFT encontrado')).toBeVisible()
   expect(catalogParams(page).q).toBe('zzzz')
   await catalogRegion(page).getByRole('button', { name: 'Limpar filtros' }).click()

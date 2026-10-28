@@ -1,10 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
 import shareEmail from '@/assets/icons/share-email.svg'
 import shareLinkedin from '@/assets/icons/share-linkedin.svg'
 import shareTwitter from '@/assets/icons/share-twitter.svg'
+import { useTimedAnnouncement } from '@/components/feedback/use-timed-announcement'
 import { cn } from '@/lib/utils'
-
-const FEEDBACK_MS = 4000
 
 function currentUrl() {
   return typeof window === 'undefined' ? '' : window.location.href
@@ -16,15 +14,7 @@ function currentUrl() {
  * O resultado é anunciado num `aria-live`.
  */
 export function ShareNft({ name, className }: { name: string; className?: string }) {
-  const [feedback, setFeedback] = useState('')
-  const timer = useRef<number | undefined>(undefined)
-  useEffect(() => () => window.clearTimeout(timer.current), [])
-
-  function announce(message: string) {
-    window.clearTimeout(timer.current)
-    setFeedback(message)
-    timer.current = window.setTimeout(() => setFeedback(''), FEEDBACK_MS)
-  }
+  const [feedback, announce] = useTimedAnnouncement<string>()
 
   async function share() {
     const url = currentUrl()

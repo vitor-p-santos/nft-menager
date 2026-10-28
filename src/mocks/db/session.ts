@@ -1,5 +1,5 @@
-import { HttpResponse } from 'msw'
 import type { Session } from '@/entities/session'
+import { apiError } from '../http'
 import { getScenarioValue, getSessionTtlMs } from '../scenarios'
 import { loadTable, saveTable } from './storage'
 import { usersTable, type UserRow } from './users'
@@ -88,15 +88,13 @@ export function getSessionUser(request: Request): SessionUser | null {
   return resolved.status === 'valid' ? { id: resolved.user.id } : null
 }
 
-export const unauthorizedResponse = () =>
-  HttpResponse.json({ code: 'unauthorized', message: 'Entre para continuar' }, { status: 401 })
-export const sessionExpiredResponse = () =>
-  HttpResponse.json({ code: 'session_expired', message: 'Sua sessão expirou. Entre novamente.' }, { status: 401 })
+export const unauthorizedResponse = () => apiError(401, 'unauthorized', 'Entre para continuar')
+export const sessionExpiredResponse = () => apiError(401, 'session_expired', 'Sua sessão expirou. Entre novamente.')
 
 /** Para rotas autenticadas: devolve o usuário ou a resposta 401 adequada (`unauthorized`/`session_expired`). */
-export function authenticate(
-  request: Request,
-): { user: UserRow; token: string; session: Session; error?: never } | { error: Response } {
+export type AuthenticatedSession = { user: UserRow; token: string; session: Session }
+
+export function authenticate(request: Request): (AuthenticatedSession & { error?: never }) | { error: Response } {
   const resolved = resolveSession(request)
   if (resolved.status === 'valid') return resolved
   return { error: resolved.status === 'expired' ? sessionExpiredResponse() : unauthorizedResponse() }

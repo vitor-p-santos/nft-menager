@@ -96,11 +96,6 @@ export const sessionStore = {
 
 const subscribeReact = (onChange: () => void) => sessionStore.subscribe(onChange)
 
-/** Sessão atual (`{ user, session }` ou `null`), reativa e sincronizada entre abas. */
-export function useSession(): SessionState {
-  return useSyncExternalStore(subscribeReact, sessionStore.get, sessionStore.get)
-}
-
 /** Usuário logado ou `null`. */
 export function useCurrentUser(): User | null {
   return useSyncExternalStore(subscribeReact, sessionStore.getUser, sessionStore.getUser)

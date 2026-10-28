@@ -1,6 +1,6 @@
 import { nftChangesSchema, type NftChanges } from '@/entities/nft'
 import { nftsTable } from '../db/catalog'
-import { forceSettlement } from '../handlers/checkout'
+import { forceSettlement } from '../domain/payment'
 import { publishNftUpdated } from './events'
 import { connectionStats, dropConnections, envelope, publish, recentEvents, type EmittedEvent } from './server'
 

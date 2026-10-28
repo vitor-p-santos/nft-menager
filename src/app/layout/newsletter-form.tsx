@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useId } from 'react'
 import { useForm } from 'react-hook-form'
+import { Button } from '@/components/ui/button'
 import { useSubscribeNewsletter } from '@/features/home/api/queries'
 import { newsletterSchema, type NewsletterInput } from '@/features/home/schemas/content'
 
@@ -39,13 +40,14 @@ export function NewsletterForm() {
           className="min-w-0 flex-1 bg-transparent text-body leading-4 text-foreground placeholder:text-secondary focus-visible:outline-none"
           {...register('email')}
         />
-        <button
+        <Button
           type="submit"
+          size="none"
           disabled={subscribe.isPending}
-          className="flex h-10 w-[85px] cursor-pointer items-center justify-center rounded-r-md bg-primary pr-1 pl-4 text-lead leading-4 font-bold text-primary-foreground disabled:opacity-60"
+          className="h-10 w-[85px] rounded-r-md pr-1 pl-4 text-lead leading-4 font-bold disabled:opacity-60"
         >
           Enviar
-        </button>
+        </Button>
       </div>
       <output id={errorId} aria-live="polite" className="block text-caption-lg leading-[22px] text-muted-foreground">
         {feedback ?? (subscribe.isSuccess ? 'Inscrição confirmada! Fique de olho no seu e-mail.' : 'Receba lançamentos selecionados, histórias de criadores e novidades do mercado.')}

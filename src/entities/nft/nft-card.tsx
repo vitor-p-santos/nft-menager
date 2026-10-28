@@ -2,10 +2,14 @@ import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { Skeleton } from '@/components/feedback/skeleton'
 import { Badge } from '@/components/ui/badge'
+import { hasDiscount } from './price'
 import type { NftSummary } from './schema'
 import { formatEthLabel } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { ResponsiveImage } from '@/components/ui/responsive-image'
+
+/** Grade de cards do catálogo (Figma "Products" / Mobile "Grid"): 2 colunas no mobile, 3 a partir de `md`. */
+export const NFT_GRID_CLASS = 'grid grid-cols-2 gap-x-4 gap-y-6 md:grid-cols-3 md:gap-x-[34px] md:gap-y-12'
 
 /**
  * Card do catálogo (Figma "Products" / Mobile "Grid").
@@ -15,8 +19,6 @@ import { ResponsiveImage } from '@/components/ui/responsive-image'
  * composto na rota, para que nenhuma feature importe outra.
  */
 export function NftCard({ nft, priority = false, action }: { nft: NftSummary; priority?: boolean; action?: ReactNode }) {
-  const hasDiscount = nft.compareAtPriceWei !== null && BigInt(nft.compareAtPriceWei) > BigInt(nft.priceWei)
-
   return (
     <article className="group relative flex flex-col">
       <div className="flex aspect-[175/200] items-start justify-center overflow-hidden rounded-2xl bg-card px-1 pt-3 md:aspect-[258/300] md:items-center md:rounded-none md:pt-0">
@@ -66,7 +68,7 @@ export function NftCard({ nft, priority = false, action }: { nft: NftSummary; pr
             <span className="sr-only">Preço: </span>
             {formatEthLabel(nft.priceWei)}
           </span>
-          {hasDiscount && nft.compareAtPriceWei && (
+          {hasDiscount(nft) && (
             <s className="text-muted-foreground">
               <span className="sr-only">Preço anterior: </span>
               {formatEthLabel(nft.compareAtPriceWei)}

@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { networkSchema } from '@/entities/nft'
 import { displayNameSchema, emailSchema, type User } from '@/entities/session'
-import { ENS_NAME_PATTERN, isWalletAddress, walletAddressError, walletProviderSchema, type Wallet } from '@/entities/wallet'
+import { ENS_NAME_PATTERN, isWalletAddress, stripEthSuffix, walletAddressError, walletProviderSchema, type Wallet } from '@/entities/wallet'
 import { optionalEnsNameSchema, optionalText } from './text'
 
 /**
@@ -53,7 +53,7 @@ export type CreateWalletRequest = z.input<typeof createWalletRequestSchema>
 /** `PATCH /me/wallets/:id`: qualquer subconjunto dos campos (o papel muda só por `/primary`). */
 export type UpdateWalletRequest = Partial<WalletFormValues>
 
-/** Carteira salva → valores do formulário (opcionais `null` viram ''). */
+/** Carteira salva → valores do formulário (opcionais `null` viram ''; o ENS sem o ".eth" fixo do campo). */
 export function walletToFormValues(wallet: Wallet): WalletFormValues {
   return {
     label: wallet.label,
@@ -66,7 +66,7 @@ export function walletToFormValues(wallet: Wallet): WalletFormValues {
     secondaryWallet: wallet.secondaryWallet ?? '',
     referralCode: wallet.referralCode ?? '',
     email: wallet.email ?? '',
-    ensName: wallet.ensName ?? '',
+    ensName: stripEthSuffix(wallet.ensName),
   }
 }
 
@@ -83,6 +83,6 @@ export function newWalletFormDefaults(user: User): WalletFormValues {
     secondaryWallet: '',
     referralCode: '',
     email: user.email,
-    ensName: user.ensName ?? '',
+    ensName: stripEthSuffix(user.ensName),
   }
 }

@@ -13,19 +13,13 @@ import { CATALOG_SECTION_ID } from '@/entities/catalog'
 import { siteQueryOptions } from '@/features/home/api/queries'
 import type { SiteSettings } from '@/features/home/schemas/content'
 import type { PageSlug } from '@/features/pages/schemas/page'
+import { cn } from '@/lib/utils'
 
 // O formulário (RHF + Zod) carrega à parte (T-101): o rodapé fica abaixo da dobra e some no mobile,
 // então o react-hook-form sai do caminho crítico. O espaço fica reservado enquanto carrega.
 const NewsletterForm = lazy(() => import('./newsletter-form').then((m) => ({ default: m.NewsletterForm })))
 
-const FEATURES = [
-  { letter: 'W', title: 'Segurança da carteira', text: 'Proteja sua carteira e colecione arte digital verificada com confiança.' },
-  { letter: 'C', title: 'Criadores em destaque', text: 'Conheça artistas, estúdios e comunidades que moldam a cultura digital na rede.' },
-  { letter: 'D', title: 'Alertas de lançamentos', text: 'Receba calendários de cunhagem, novidades de listas de acesso e análises do mercado.' },
-]
-
 type FooterLink = { label: string } & (
-  | { kind: 'catalog'; search: { categories: string[] } }
   | { kind: 'page'; slug: PageSlug }
   /** Rota privada do app (sem sessão, `requireAuth` leva a /entrar e volta). */
   | { kind: 'route'; to: '/atividade' | '/perfil' | '/perfil/lista-de-interesse' }
@@ -33,7 +27,7 @@ type FooterLink = { label: string } & (
   | { kind: 'soon' }
 )
 
-/** Colunas de links (research.md, D-10). */
+/** Colunas de links das telas do app (research.md, D-10). A coluna "Coleções" vem de `GET /content/site`. */
 const LINK_COLUMNS: { title: string; items: FooterLink[] }[] = [
   {
     title: 'Meu perfil',
@@ -55,16 +49,6 @@ const LINK_COLUMNS: { title: string; items: FooterLink[] }[] = [
       { label: 'Denunciar item', kind: 'page', slug: 'denunciar-item' },
     ],
   },
-  {
-    title: 'Coleções',
-    items: [
-      { label: 'Arte digital', kind: 'catalog', search: { categories: ['arte-digital'] } },
-      { label: 'Fotografia', kind: 'catalog', search: { categories: ['fotografia'] } },
-      { label: 'Música', kind: 'catalog', search: { categories: ['musica'] } },
-      { label: 'Arte 3D', kind: 'catalog', search: { categories: ['arte-3d'] } },
-      { label: 'Utilidade', kind: 'catalog', search: { categories: ['utilidade'] } },
-    ],
-  },
 ]
 
 /** Ícones originais do Figma por rede; URL e rótulo vêm de `GET /content/site`. */
@@ -80,12 +64,6 @@ const linkClass = 'rounded-sm hover:text-text-accent'
 
 function FooterLinkItem({ item }: { item: FooterLink }) {
   switch (item.kind) {
-    case 'catalog':
-      return (
-        <Link to="/" search={item.search} hash={CATALOG_SECTION_ID} className={linkClass}>
-          {item.label}
-        </Link>
-      )
     case 'page':
       return (
         <Link to="/paginas/$slug" params={{ slug: item.slug }} className={linkClass}>
@@ -124,13 +102,71 @@ function ContactLinks() {
   }
   return (
     <>
-      <a href={`mailto:${data.contact.email}`} className={`text-body leading-[22px] text-foreground ${linkClass}`}>
+      <a href={`mailto:${data.contact.email}`} className={cn('text-body leading-[22px] text-foreground', linkClass)}>
         {data.contact.email}
       </a>
-      <a href={data.contact.phoneHref} className={`text-body leading-[22px] text-foreground ${linkClass}`}>
+      <a href={data.contact.phoneHref} className={cn('text-body leading-[22px] text-foreground', linkClass)}>
         {data.contact.phone}
       </a>
     </>
+  )
+}
+
+/** Destaques do topo (letra no círculo âmbar, título e texto). Skeleton com a mesma geometria. */
+function Features() {
+  const { data } = useSiteSettings()
+  const items = data?.features ?? Array.from({ length: 3 }, () => null)
+  return (
+    <ul aria-busy={!data} className="grid grid-cols-3 laptop:contents">
+      {items.map((feature, i) => (
+        <li
+          key={feature?.id ?? i}
+          className={cn('flex flex-col gap-3 px-4 laptop:w-[264px]', i === 0 && 'laptop:flex-1', i > 0 && 'border-l border-primary')}
+        >
+          {feature ? (
+            <>
+              <span aria-hidden className="flex size-[74px] items-center justify-center rounded-full bg-primary text-heading font-bold text-primary-foreground">
+                {feature.letter}
+              </span>
+              <h2 className="text-body-xl leading-4 font-bold text-foreground">{feature.title}</h2>
+              <p className="max-w-[204px] text-body leading-[22px] text-muted-foreground">{feature.text}</p>
+            </>
+          ) : (
+            <>
+              <Skeleton className="size-[74px] rounded-full" />
+              <Skeleton className="h-4 w-40" />
+              {/* 4 linhas de 22px, a altura do texto mais longo */}
+              <Skeleton className="h-[88px] max-w-[204px]" />
+            </>
+          )}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+/** Coluna "Coleções": atalhos para o catálogo filtrado. Skeleton com 5 linhas da mesma altura (30px). */
+function CollectionLinks() {
+  const { data } = useSiteSettings()
+  return (
+    <nav aria-label="Coleções" className="flex flex-col gap-2">
+      <h2 className="text-lead leading-4 font-bold text-foreground">Coleções</h2>
+      <ul aria-busy={!data} className="text-body leading-[30px] text-foreground">
+        {data
+          ? data.collections.map((collection) => (
+              <li key={collection.categoryId}>
+                <Link to="/" search={{ categories: [collection.categoryId] }} hash={CATALOG_SECTION_ID} className={linkClass}>
+                  {collection.label}
+                </Link>
+              </li>
+            ))
+          : Array.from({ length: 5 }, (_, i) => (
+              <li key={i} aria-hidden className="flex h-[30px] items-center">
+                <Skeleton className="h-4 w-28" />
+              </li>
+            ))}
+      </ul>
+    </nav>
   )
 }
 
@@ -172,18 +208,7 @@ export function SiteFooter() {
     <footer className="hidden pb-6 md:block">
       <Container>
         <div className="flex flex-col gap-8 bg-card p-8 laptop:h-[250px] laptop:flex-row laptop:items-stretch laptop:justify-between laptop:gap-0">
-
-          <ul className="grid grid-cols-3 laptop:contents">
-            {FEATURES.map((f, i) => (
-              <li key={f.letter} className={`flex flex-col gap-3 px-4 laptop:w-[264px] ${i === 0 ? 'laptop:flex-1' : ''} ${i > 0 ? 'border-l border-primary' : ''}`}>
-                <span aria-hidden className="flex size-[74px] items-center justify-center rounded-full bg-primary text-heading font-bold text-primary-foreground">
-                  {f.letter}
-                </span>
-                <h2 className="text-body-xl leading-4 font-bold text-foreground">{f.title}</h2>
-                <p className="max-w-[204px] text-body leading-[22px] text-muted-foreground">{f.text}</p>
-              </li>
-            ))}
-          </ul>
+          <Features />
           <div className="px-4 laptop:w-[357px] laptop:border-l laptop:border-primary">
             <Suspense fallback={<div aria-hidden className="h-[124px]" />}>
               <NewsletterForm />
@@ -217,6 +242,7 @@ export function SiteFooter() {
               </ul>
             </nav>
           ))}
+          <CollectionLinks />
           <div className="flex flex-col gap-8">
             <div className="flex w-[190px] flex-col gap-5">
               <h2 className="text-lead leading-4 font-bold text-foreground">Redes sociais</h2>

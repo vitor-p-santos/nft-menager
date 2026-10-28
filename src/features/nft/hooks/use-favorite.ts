@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { useRouterState } from '@tanstack/react-router'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
+import { useTimedAnnouncement } from '@/components/feedback/use-timed-announcement'
 import { takePendingAction, useCurrentUser, type PendingAction } from '@/entities/session'
 import { ApiError } from '@/lib/api'
 import { favoritesQueries, useToggleFavorite } from '../api/queries'
 
-const FEEDBACK_MS = 4000
 /** O convite para entrar tem link: fica mais tempo para dar tempo de chegar nele pelo teclado. */
 const LOGIN_FEEDBACK_MS = 10_000
 
@@ -24,17 +24,14 @@ export function useFavorite(nftId: string, nftName: string) {
   const favorites = useQuery({ ...favoritesQueries.list(), enabled: user !== null })
   const toggle = useToggleFavorite()
   const href = useRouterState({ select: (state) => state.location.href })
-  const [feedback, setFeedback] = useState<FavoriteFeedback | null>(null)
-  const timer = useRef<number | undefined>(undefined)
+  const [feedback, setTimedFeedback] = useTimedAnnouncement<FavoriteFeedback>()
   const buttonRef = useRef<HTMLButtonElement>(null)
 
-  useEffect(() => () => window.clearTimeout(timer.current), [])
-
-  function announce(message: string, loginRedirect?: string) {
-    window.clearTimeout(timer.current)
-    setFeedback({ message, loginRedirect })
-    timer.current = window.setTimeout(() => setFeedback(null), loginRedirect ? LOGIN_FEEDBACK_MS : FEEDBACK_MS)
-  }
+  const announce = useCallback(
+    (message: string, loginRedirect?: string) =>
+      setTimedFeedback({ message, loginRedirect }, loginRedirect ? LOGIN_FEEDBACK_MS : undefined),
+    [setTimedFeedback],
+  )
 
   // Conclui o favoritar pendente quando há sessão (takePendingAction lê e limpa de uma vez:
   // se o NFT aparece em mais de um botão, só o primeiro executa). PUT é idempotente.
@@ -57,7 +54,7 @@ export function useFavorite(nftId: string, nftName: string) {
         onError: () => announce('Não foi possível favoritar. Tente novamente.'),
       },
     )
-  }, [user, favoritesReady, nftId, nftName, href, mutateFavorite])
+  }, [user, favoritesReady, nftId, nftName, href, mutateFavorite, announce])
 
   const saved = favorites.data?.some((nft) => nft.id === nftId) ?? false
   // Enquanto a mutation roda, mostra o estado pedido (otimista mesmo sem a lista em cache)

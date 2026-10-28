@@ -30,7 +30,7 @@ export function BlogSection({ posts }: { posts: Post[] }) {
       <Container>
         <header className="flex flex-col items-center gap-3 text-center">
           {/* 28px medido no recorte do Figma (não há variável tipográfica para este título) */}
-          <h2 id="diario-titulo" className="text-[1.75rem] leading-9 font-bold text-foreground">
+          <h2 id="diario-titulo" className="text-heading-lg leading-9 font-bold text-foreground">
             Diário da Cunhagem
           </h2>
           <p className="text-body leading-6 text-muted-foreground">

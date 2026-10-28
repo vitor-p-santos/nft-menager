@@ -64,7 +64,6 @@ export const avatarDataUrlSchema = z
   })
 
 export const avatarUploadSchema = z.object({ dataUrl: avatarDataUrlSchema })
-export type AvatarUpload = z.infer<typeof avatarUploadSchema>
 
 /** Arquivo escolhido no `<input type="file">` (validação antes de ler/redimensionar). */
 export const avatarFileSchema = z

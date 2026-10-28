@@ -1,6 +1,6 @@
-import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
-import { onSessionExpired, sessionStore, type OAuthProvider, type SessionExpiredEvent } from '@/entities/session'
+import { onSessionExpired, type OAuthProvider, type SessionExpiredEvent } from '@/entities/session'
 import { api, http } from '@/lib/api'
 import {
   authResponseSchema,
@@ -11,24 +11,9 @@ import {
   type PasswordResetFormValues,
   type RegisterRequest,
 } from '../schemas/auth'
-import { authKeys } from './keys'
 import { completeSignIn, signOut } from './session'
 
 export { authKeys } from './keys'
-
-export const authQueries = {
-  /** Sessão atual no servidor. Só faz sentido com token: use `enabled: isAuthenticated`. */
-  me: () =>
-    queryOptions({
-      queryKey: authKeys.me(),
-      queryFn: async ({ signal }) => {
-        const auth = await api.get('/auth/me', authResponseSchema, { signal })
-        sessionStore.refresh(auth)
-        return auth
-      },
-      staleTime: 60_000,
-    }),
-}
 
 /**
  * Login por e-mail/senha. A mutation só resolve depois do merge do carrinho e da troca do cache:

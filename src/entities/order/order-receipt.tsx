@@ -4,6 +4,7 @@ import { formatEthLabel } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { formatReceiptDate } from './format'
 import type { Order } from './schema'
+import { buttonVariants } from '@/components/ui/button-variants'
 import { ResponsiveImage } from '@/components/ui/responsive-image'
 
 /** Exploradores de bloco por rede ("Ver no Etherscan" no Figma). */
@@ -118,7 +119,7 @@ export function OrderReceipt({ order }: { order: Order }) {
           href={explorer.txUrl(txHash)}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-5 inline-flex h-12 items-center justify-center self-center rounded-md bg-primary px-4 text-body-lg leading-5 font-bold text-primary-foreground hover:bg-primary/90"
+          className={cn(buttonVariants({ size: 'none' }), 'mt-5 h-12 self-center rounded-md px-4 text-body-lg leading-5 font-bold')}
         >
           Ver no {explorer.label}
           <span className="sr-only"> (abre em nova aba)</span>

@@ -1,111 +1,27 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link, useCanGoBack, useNavigate, useRouter } from '@tanstack/react-router'
-import { useState, type ReactNode } from 'react'
-import arrowBack from '@/assets/icons/arrow-back.svg'
-import shopIcon from '@/assets/icons/shop.svg'
+import type { ReactNode } from 'react'
 import starSm from '@/assets/icons/star-sm.svg'
 import { Skeleton } from '@/components/feedback/skeleton'
 import { EmptyState, ErrorState } from '@/components/feedback/states'
+import { BackButton } from '@/components/layout/back-button'
 import { Container } from '@/components/layout/container'
-import { buttonVariants } from '@/components/ui/button-variants'
-import { useAddToCart } from '@/entities/cart'
+import { Breadcrumbs } from '@/components/layout/page-heading'
 import { CATALOG_SECTION_ID } from '@/entities/catalog'
-import type { Edition, Nft } from '@/entities/nft'
-import { ApiError, toApiError } from '@/lib/api'
-import { formatEthLabel } from '@/lib/money'
-import { cn } from '@/lib/utils'
+import { ExploreLink } from '@/entities/catalog/explore-link'
+import type { Nft } from '@/entities/nft'
+import { ApiError } from '@/lib/api'
 import { nftQueries } from '../api/queries'
+import { useNftPurchase } from '../hooks/use-nft-purchase'
+import { BuyBar } from './buy-bar'
 import { EditionSelector } from './edition-selector'
 import { FavoriteButton } from './favorite-button'
 import { NftDescriptionTabs } from './nft-description-tabs'
 import { NftGallery } from './nft-gallery'
-import { QuantityStepper } from '@/components/ui/quantity-stepper'
+import { NftPrice } from './nft-price'
+import { PurchasePanel } from './purchase-panel'
 import { RatingStars } from './rating-stars'
 import { RelatedNfts } from './related-nfts'
 import { ShareNft } from './share-nft'
-
-type CartFeedback = { tone: 'status' | 'error'; message: string } | null
-
-/**
- * "Comprar" adiciona ao carrinho e abre a tela do carrinho (o checkout parte dele, Fase 5);
- * o botão de carrinho só adiciona e anuncia o resultado. Erros (ex.: 409 sem estoque) também.
- */
-function useCartActions(nft: Nft, edition: Edition | null, quantity: number) {
-  const add = useAddToCart()
-  const navigate = useNavigate()
-  const [feedback, setFeedback] = useState<CartFeedback>(null)
-
-  function addToCart(goToCart: boolean) {
-    if (!edition || add.isPending) return
-    setFeedback(null)
-    add.mutate(
-      { nftId: nft.id, edition, quantity },
-      {
-        onSuccess: () => {
-          if (goToCart) void navigate({ to: '/carrinho' })
-          else setFeedback({ tone: 'status', message: `${nft.name} foi adicionado ao carrinho.` })
-        },
-        onError: (error) =>
-          setFeedback({ tone: 'error', message: `Não foi possível adicionar ao carrinho. ${toApiError(error).message}` }),
-      },
-    )
-  }
-
-  return { addToCart, isPending: add.isPending, feedback }
-}
-
-function CartFeedbackMessage({ feedback, className }: { feedback: CartFeedback; className?: string }) {
-  return (
-    <p
-      aria-live="polite"
-      className={cn('text-caption leading-4', feedback?.tone === 'error' ? 'text-destructive' : 'text-text-accent', className)}
-    >
-      {feedback?.message}
-    </p>
-  )
-}
-
-function BackToCatalog() {
-  return (
-    <Link to="/" hash={CATALOG_SECTION_ID} className={buttonVariants({ size: 'lg' })}>
-      Voltar ao catálogo
-    </Link>
-  )
-}
-
-function Price({ nft, className }: { nft: Nft; className?: string }) {
-  const hasDiscount = nft.compareAtPriceWei !== null && BigInt(nft.compareAtPriceWei) > BigInt(nft.priceWei)
-  return (
-    <p className={cn('flex flex-wrap items-baseline gap-x-3 font-bold text-text-accent', className)}>
-      <span>
-        <span className="sr-only">Preço: </span>
-        {formatEthLabel(nft.priceWei)}
-      </span>
-      {hasDiscount && nft.compareAtPriceWei && (
-        <s className="text-body-md font-normal text-muted-foreground">
-          <span className="sr-only">Preço anterior: </span>
-          {formatEthLabel(nft.compareAtPriceWei)}
-        </s>
-      )}
-    </p>
-  )
-}
-
-/** Voltar (hero mobile): volta no histórico quando possível; senão, vai ao catálogo. */
-function BackButton() {
-  const router = useRouter()
-  const canGoBack = useCanGoBack()
-  return (
-    <button
-      type="button"
-      aria-label="Voltar"
-      onClick={() => (canGoBack ? router.history.back() : void router.navigate({ to: '/', hash: CATALOG_SECTION_ID }))}
-      className="flex size-[35px] cursor-pointer items-center justify-center rounded-full border border-border bg-surface-raised"
-    >
-      <img src={arrowBack} alt="" width={13} height={7} className="rotate-90" />
-    </button>
-  )
-}
 
 function InfoLine({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -117,38 +33,17 @@ function InfoLine({ label, children }: { label: string; children: ReactNode }) {
 }
 
 function NftDetailView({ nft }: { nft: Nft }) {
-  const [edition, setEdition] = useState<Edition | null>(() => nft.editions.find((e) => e.available > 0)?.edition ?? null)
-  const [quantity, setQuantity] = useState(1)
-  const available = nft.editions.find((e) => e.edition === edition)?.available ?? 0
-  // Limita também quando a disponibilidade muda após um refetch
-  const qty = Math.min(Math.max(quantity, 1), Math.max(available, 1))
-  const soldOut = available === 0
-  const cart = useCartActions(nft, edition, qty)
-
-  function changeEdition(next: Edition) {
-    setEdition(next)
-    const max = nft.editions.find((e) => e.edition === next)?.available ?? 1
-    setQuantity((q) => Math.min(Math.max(q, 1), Math.max(max, 1)))
-  }
+  const purchase = useNftPurchase(nft)
 
   return (
     <article aria-labelledby="nft-titulo">
       <Container className="hidden pt-8 pb-3 md:block">
-        <nav aria-label="Trilha de navegação">
-          <ol className="flex gap-1 text-body-md leading-4 font-bold text-foreground">
-            <li>
-              <Link to="/" className="rounded-sm hover:text-text-accent">
-                Início
-              </Link>
-            </li>
-            <li aria-hidden>/</li>
-            <li>
-              <Link to="/" hash={CATALOG_SECTION_ID} className="rounded-sm hover:text-text-accent">
-                Mercado
-              </Link>
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumbs
+          items={[
+            { label: 'Início', to: '/' },
+            { label: 'Mercado', to: '/', hash: CATALOG_SECTION_ID },
+          ]}
+        />
       </Container>
 
       <div className="mx-auto flex w-full max-w-[1248px] flex-col md:gap-8 md:px-6 xl:flex-row">
@@ -157,7 +52,7 @@ function NftDetailView({ nft }: { nft: Nft }) {
           name={nft.name}
           mobileTopBar={
             <div className="flex items-center justify-between">
-              <BackButton />
+              <BackButton fallback={{ to: '/', hash: CATALOG_SECTION_ID }} />
               <FavoriteButton nftId={nft.id} nftName={nft.name} variant="round" />
             </div>
           }
@@ -182,7 +77,7 @@ function NftDetailView({ nft }: { nft: Nft }) {
               </p>
               {/* Desktop: preço + estrelas */}
               <div className="hidden flex-wrap items-center justify-between gap-3 md:flex">
-                <Price nft={nft} className="text-title leading-4" />
+                <NftPrice nft={nft} className="text-title leading-4" />
                 <p className="flex items-center gap-1 text-body-md text-foreground">
                   <RatingStars rating={nft.rating} />
                   {nft.reviewsCount} avaliações de colecionadores
@@ -197,24 +92,9 @@ function NftDetailView({ nft }: { nft: Nft }) {
             <p className="text-body leading-6 text-muted-foreground">{nft.description}</p>
           </div>
 
-          <EditionSelector editions={nft.editions} value={edition} onChange={changeEdition} />
+          <EditionSelector editions={nft.editions} value={purchase.edition} onChange={purchase.changeEdition} />
 
-          <div className="hidden flex-wrap items-center justify-between gap-4 md:flex">
-            <QuantityStepper size="lg" value={qty} max={available} onChange={setQuantity} />
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                disabled={soldOut}
-                aria-busy={cart.isPending}
-                onClick={() => cart.addToCart(true)}
-                className="h-10 w-[130px] cursor-pointer rounded-md bg-primary text-body leading-5 font-bold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50 aria-busy:cursor-wait"
-              >
-                {soldOut ? 'ESGOTADO' : 'COMPRAR'}
-              </button>
-              <FavoriteButton nftId={nft.id} nftName={nft.name} variant="button" />
-            </div>
-            <CartFeedbackMessage feedback={cart.feedback} className="w-full empty:hidden" />
-          </div>
+          <PurchasePanel nft={nft} purchase={purchase} />
 
           <div className="flex flex-col gap-3">
             <dl className="flex flex-col gap-3 text-body-md leading-normal text-secondary">
@@ -235,48 +115,7 @@ function NftDetailView({ nft }: { nft: Nft }) {
         <RelatedNfts nftId={nft.id} />
       </Container>
 
-      {/* Mobile: "Buy Bar" fixa; o espaçador reserva a altura para não cobrir conteúdo */}
-      <div aria-hidden className="h-[164px] md:hidden" />
-      <section
-        aria-label="Comprar"
-        className="fixed inset-x-0 bottom-0 z-40 flex h-[164px] flex-col gap-5 rounded-t-[40px] bg-card px-6 pt-5 pb-9 shadow-buy-bar md:hidden"
-      >
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span aria-hidden className="text-body-md leading-4 font-medium text-muted-foreground">
-              Qtd.
-            </span>
-            <QuantityStepper size="sm" value={qty} max={available} onChange={setQuantity} />
-          </div>
-          <Price nft={nft} className="min-w-0 justify-end gap-y-1 text-right text-title-sm leading-4" />
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            disabled={soldOut}
-            aria-busy={cart.isPending}
-            onClick={() => cart.addToCart(true)}
-            className="h-[60px] w-[196px] cursor-pointer rounded-[40px] bg-[image:var(--gradient-cta)] text-body-lg leading-5 font-bold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50 aria-busy:cursor-wait"
-          >
-            {soldOut ? 'Esgotado' : 'Comprar NFT'}
-          </button>
-          <button
-            type="button"
-            disabled={soldOut}
-            aria-busy={cart.isPending}
-            aria-label="Adicionar ao carrinho"
-            onClick={() => cart.addToCart(false)}
-            className="flex size-[60px] cursor-pointer items-center justify-center rounded-full border border-border bg-surface-raised disabled:cursor-not-allowed disabled:opacity-50 aria-busy:cursor-wait"
-          >
-            <img src={shopIcon} alt="" width={20} height={20} />
-          </button>
-        </div>
-        {/* Mesma mensagem da área desktop: a Buy Bar tem altura fixa, então ela flutua acima */}
-        <CartFeedbackMessage
-          feedback={cart.feedback}
-          className="absolute inset-x-6 -top-8 rounded-md bg-surface-raised px-3 py-2 empty:hidden"
-        />
-      </section>
+      <BuyBar nft={nft} purchase={purchase} />
     </article>
   )
 }
@@ -339,7 +178,7 @@ export function NftDetail({ nftId }: { nftId: string }) {
         <EmptyState
           title="NFT não encontrado"
           description="Ele pode ter sido removido ou o link está incorreto."
-          action={<BackToCatalog />}
+          action={<ExploreLink>Voltar ao catálogo</ExploreLink>}
         />
       </Container>
     )

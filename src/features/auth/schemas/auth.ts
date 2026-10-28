@@ -66,4 +66,3 @@ export const PASSWORD_RESET_NEUTRAL_MESSAGE =
 export const authSearchSchema = z.object({
   redirect: safeRedirectSchema.optional().catch(undefined),
 })
-export type AuthSearch = z.infer<typeof authSearchSchema>
