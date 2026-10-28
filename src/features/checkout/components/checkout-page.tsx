@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useCanGoBack, useNavigate, useRouter } from '@tanstack/react-router'
 import { ChevronDownIcon } from 'lucide-react'
-import { useId, useState, type ReactNode } from 'react'
+import { useId, useRef, useState, type ReactNode } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import arrowBack from '@/assets/icons/arrow-back.svg'
 import { Skeleton } from '@/components/feedback/skeleton'
@@ -12,7 +12,7 @@ import { buttonVariants } from '@/components/ui/button-variants'
 import { cartQueries } from '@/entities/cart'
 import { CATALOG_SECTION_ID } from '@/entities/catalog'
 import { useCurrentUser, type User } from '@/entities/session'
-import { stripEthSuffix, walletQueries, type Wallet, type WalletProvider } from '@/entities/wallet'
+import { sameWalletAddress, stripEthSuffix, walletQueries, type Wallet, type WalletProvider } from '@/entities/wallet'
 import { cn } from '@/lib/utils'
 import { useCheckoutFlow, type CheckoutFlow } from '../hooks/use-checkout-flow'
 import { collectorDefaults, collectorSchema, type CollectorFormValues, type CollectorInput } from '../schemas/checkout'
@@ -105,7 +105,13 @@ type CheckoutFormProps = {
  */
 function CheckoutForm({ user, wallets, flow, walletActions }: CheckoutFormProps) {
   const primary = wallets.find((w) => w.role === 'primary') ?? wallets[0] ?? null
-  const [selectedWalletId, setSelectedWalletId] = useState<string | null>(primary?.id ?? null)
+  const [selectedWalletId, setSelected] = useState<string | null>(primary?.id ?? null)
+  // Seleção atual para callbacks assíncronos (a remoção resolve depois de outros renders)
+  const selectedRef = useRef(selectedWalletId)
+  function setSelectedWalletId(id: string | null) {
+    selectedRef.current = id
+    setSelected(id)
+  }
   const [detailsOpen, setDetailsOpen] = useState(primary === null)
   const detailsId = useId()
   const form: CollectorForm = useForm<CollectorFormValues, unknown, CollectorInput>({
@@ -141,9 +147,9 @@ function CheckoutForm({ user, wallets, flow, walletActions }: CheckoutFormProps)
     requestAnimationFrame(() => setFocus('walletAddress'))
   }
 
-  /** Remover a carteira escolhida (menu ⋮): passa para outra salva ou para a carteira digitada. */
-  function beforeRemoveWallet(wallet: Wallet) {
-    if (wallet.id !== selectedWalletId) return
+  /** Carteira escolhida removida (menu ⋮): passa para outra salva ou para a carteira digitada. */
+  function walletRemoved(wallet: Wallet) {
+    if (wallet.id !== selectedRef.current) return
     const next = wallets.find((w) => w.id !== wallet.id)
     if (next) selectWallet(next)
     else toggleOtherWallet(true)
@@ -158,7 +164,7 @@ function CheckoutForm({ user, wallets, flow, walletActions }: CheckoutFormProps)
       const saved = wallets.find((w) => w.id === selectedWalletId)
       // A carteira salva só vale se o formulário ainda aponta para ela (senão é carteira digitada)
       const walletId =
-        saved && saved.address.toLowerCase() === collector.walletAddress.toLowerCase() && saved.network === collector.network
+        saved && saved.network === collector.network && sameWalletAddress(saved.address, collector.walletAddress, collector.network)
           ? saved.id
           : null
       flow.submit({ walletId, network: collector.network, collector })
@@ -190,7 +196,7 @@ function CheckoutForm({ user, wallets, flow, walletActions }: CheckoutFormProps)
             onSelect={selectWallet}
             onSwitch={switchWallet}
             actions={walletActions}
-            onBeforeRemove={beforeRemoveWallet}
+            onRemoved={walletRemoved}
           />
           <ProviderOptions variant="mobile" value={provider} onChange={setProvider} error={providerError} />
         </div>
