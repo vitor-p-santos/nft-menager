@@ -69,7 +69,8 @@ function CouponForm({ cart }: { cart: Cart }) {
           type="submit"
           disabled={apply.isPending}
           className={cn(
-            'flex shrink-0 cursor-pointer items-center justify-center font-bold text-primary-foreground disabled:cursor-wait disabled:opacity-60',
+            buttonVariants({ variant: null, size: 'none' }),
+            'flex font-bold text-primary-foreground disabled:pointer-events-auto disabled:cursor-wait disabled:opacity-60',
             'h-full w-[97px] rounded-full bg-[image:var(--gradient-apply)] text-body-lg leading-4 text-foreground',
             'md:w-[102px] md:rounded-none md:rounded-r-[5px] md:bg-primary md:bg-none md:text-body-md md:text-primary-foreground',
           )}
@@ -114,9 +115,8 @@ function CouponForm({ cart }: { cart: Cart }) {
 
 /** "Conectar e finalizar" (sem sessão) ou "Finalizar" (com sessão): pílula em gradiente de 60px no mobile, botão âmbar de 40px no desktop. */
 const checkoutClass = cn(
-  'flex w-full items-center justify-center font-bold text-primary-foreground',
-  'h-[60px] rounded-[40px] bg-[image:var(--gradient-checkout)] text-body-lg',
-  'md:h-10 md:rounded-md md:bg-primary md:bg-none md:text-body-md',
+  buttonVariants({ variant: 'checkout', size: 'pill' }),
+  'flex w-full text-body-lg md:h-10 md:rounded-md md:text-body-md',
 )
 
 function Row({ label, value, className }: { label: string; value: string; className?: string }) {

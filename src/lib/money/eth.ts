@@ -67,3 +67,30 @@ export function formatEthLabel(value: Wei | string, maxDecimals = 4): string {
 export function compareWei(a: Wei, b: Wei): number {
   return a === b ? 0 : a < b ? -1 : 1
 }
+
+/*
+ * Centésimos de ETH: inteiros seguros em `number`, para controles discretos como o slider da faixa
+ * de preço do catálogo (a URL continua guardando ETH em string decimal).
+ */
+const WEI_PER_CENTI_ETH = 10n ** BigInt(ETH_DECIMALS - 2)
+
+/** Wei → centésimos de ETH, arredondando para baixo (`floor`) ou para cima (`ceil`). */
+export function weiToCentiEth(value: Wei, rounding: 'floor' | 'ceil' = 'floor'): number {
+  const centi = rounding === 'ceil' ? (value + WEI_PER_CENTI_ETH - 1n) / WEI_PER_CENTI_ETH : value / WEI_PER_CENTI_ETH
+  return Number(centi)
+}
+
+/** "0.02" (ETH) → 2; `fallback` quando o valor falta ou é inválido. */
+export function ethToCentiEth(value: string | undefined, fallback: number): number {
+  if (!value) return fallback
+  try {
+    return weiToCentiEth(parseEth(value))
+  } catch {
+    return fallback
+  }
+}
+
+/** 2 → "0.02". `decimalSeparator: ','` para exibição no padrão do Figma ("0,02"). */
+export function centiEthToEth(centi: number, decimalSeparator = '.'): string {
+  return `${Math.floor(centi / 100)}${decimalSeparator}${String(centi % 100).padStart(2, '0')}`
+}

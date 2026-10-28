@@ -26,5 +26,4 @@ export const pageSchema = z.object({
   sections: z.array(pageSectionSchema).min(1),
 })
 
-export type PageSection = z.infer<typeof pageSectionSchema>
 export type Page = z.infer<typeof pageSchema>

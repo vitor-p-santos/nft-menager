@@ -3,11 +3,13 @@ import { useRef, useState, type ReactNode } from 'react'
 import { Skeleton } from '@/components/feedback/skeleton'
 import { EmptyState, ErrorState } from '@/components/feedback/states'
 import { Container } from '@/components/layout/container'
+import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/ui/pagination'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { CATALOG_PAGE_SIZE, CATALOG_SECTION_ID, type CatalogSearch } from '@/entities/catalog'
 import type { NftSummary } from '@/entities/nft'
-import { NftCard, NftCardSkeleton } from '@/entities/nft/nft-card'
+import { NFT_GRID_CLASS, NftCard, NftCardSkeleton } from '@/entities/nft/nft-card'
+import { cn } from '@/lib/utils'
 import { catalogQueries } from '../api/queries'
 import type { CatalogNavigate } from '../hooks/catalog-search'
 import { CatalogFilters } from './catalog-filters'
@@ -24,6 +26,9 @@ type CatalogSectionProps = {
   /** Ação sobre a arte de cada card (favoritar), composta pela rota. */
   renderCardAction?: (nft: NftSummary) => ReactNode
 }
+
+/** Grade de cards com o deslocamento das colunas pares no mobile (Figma Mobile "Grid"). */
+const GRID_CLASS = cn(NFT_GRID_CLASS, 'pb-8 md:pb-0 [&>li:nth-child(even)]:translate-y-8 md:[&>li:nth-child(even)]:translate-y-0')
 
 function countActiveFilters(search: CatalogSearch) {
   return (
@@ -99,7 +104,7 @@ export function CatalogSection({ search, navigate, hero, aside, renderCardAction
     )
   } else if (!data) {
     results = (
-      <ul aria-hidden className="grid grid-cols-2 gap-x-4 gap-y-6 pb-8 md:grid-cols-3 md:gap-x-[34px] md:gap-y-12 md:pb-0 [&>li:nth-child(even)]:translate-y-8 md:[&>li:nth-child(even)]:translate-y-0">
+      <ul aria-hidden className={GRID_CLASS}>
         {Array.from({ length: CATALOG_PAGE_SIZE }, (_, i) => (
           <li key={i}>
             <NftCardSkeleton />
@@ -119,7 +124,7 @@ export function CatalogSection({ search, navigate, hero, aside, renderCardAction
     results = (
       <ul
         aria-busy={query.isFetching}
-        className="grid grid-cols-2 gap-x-4 gap-y-6 pb-8 transition-opacity aria-busy:opacity-70 md:grid-cols-3 md:gap-x-[34px] md:gap-y-12 md:pb-0 [&>li:nth-child(even)]:translate-y-8 md:[&>li:nth-child(even)]:translate-y-0"
+        className={cn(GRID_CLASS, 'transition-opacity aria-busy:opacity-70')}
       >
         {data.items.map((nft, index) => (
           <li key={nft.id}>
@@ -179,9 +184,9 @@ export function CatalogSection({ search, navigate, hero, aside, renderCardAction
               {query.isError && data && (
                 <p role="alert" className="text-body text-muted-foreground">
                   Não foi possível atualizar os resultados. Mostrando a última lista carregada.{' '}
-                  <button type="button" onClick={() => void query.refetch()} className="cursor-pointer font-bold text-text-accent underline">
+                  <Button variant="link" size="none" onClick={() => void query.refetch()} className="font-bold underline underline-offset-auto">
                     Tentar novamente
-                  </button>
+                  </Button>
                 </p>
               )}
 
@@ -206,9 +211,9 @@ export function CatalogSection({ search, navigate, hero, aside, renderCardAction
           </SheetHeader>
           {filters}
           {hasAnyFilter && (
-            <button type="button" onClick={clearFilters} className="w-max cursor-pointer text-body font-bold text-text-accent underline-offset-4 hover:underline">
+            <Button variant="link" size="none" onClick={clearFilters} className="w-max text-body font-bold">
               Limpar filtros
-            </button>
+            </Button>
           )}
         </SheetContent>
       </Sheet>

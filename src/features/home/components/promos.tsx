@@ -24,7 +24,7 @@ export function Promos({ promos }: { promos: Promo[] }) {
                 width={287}
                 height={250}
                 loading="lazy"
-                className="aspect-[287/250] w-full rounded-[15px] object-cover md:h-full md:w-[49%] md:shrink-0"
+                className="aspect-[287/250] w-full rounded-xl object-cover md:h-full md:w-[49%] md:shrink-0"
               />
               <img src={promoCurves} alt="" aria-hidden className="pointer-events-none absolute inset-0 hidden size-full md:block" />
               <div className="relative flex flex-1 flex-col items-end gap-2 p-6 text-right md:pt-10 md:pr-[30px] md:pb-0 md:pl-2">

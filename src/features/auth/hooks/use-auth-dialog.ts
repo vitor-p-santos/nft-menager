@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { matchesMedia, MD_QUERY } from '@/lib/use-media-query'
 
 /**
  * Estado do modal de autenticação desktop (Figma Sign In/Sign Up Modal). Store externo porque é
@@ -50,7 +51,6 @@ export function useAuthDialog(): AuthDialogState {
 }
 
 /** Abaixo de `md` (48rem) as telas de auth são páginas; a partir dele, modal. */
-export const DESKTOP_QUERY = '(min-width: 48rem)'
 export function isDesktopViewport() {
-  return typeof window !== 'undefined' && window.matchMedia(DESKTOP_QUERY).matches
+  return matchesMedia(MD_QUERY)
 }

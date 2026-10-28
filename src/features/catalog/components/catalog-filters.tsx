@@ -2,26 +2,13 @@ import { useId, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import type { CatalogSearch } from '@/entities/catalog'
-import { parseEth } from '@/lib/money'
+import { centiEthToEth, ethToCentiEth, weiFromString, weiToCentiEth } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { toggleValue, type CatalogNavigate } from '../hooks/catalog-search'
 import type { CatalogPage, Facet } from '../schemas/catalog'
 
-/** O slider trabalha em centésimos de ETH (inteiros seguros); a URL guarda ETH em string. */
-const CENTI_WEI = 10n ** 16n
-const toCenti = (wei: bigint) => Number(wei / CENTI_WEI)
-const centiToEth = (centi: number) => `${Math.floor(centi / 100)}.${String(centi % 100).padStart(2, '0')}`
 /** "0,02" — o Figma usa vírgula decimal no rótulo da faixa. */
-const centiLabel = (centi: number) => centiToEth(centi).replace('.', ',')
-
-function safeCenti(eth: string | undefined, fallback: number) {
-  if (!eth) return fallback
-  try {
-    return toCenti(parseEth(eth))
-  } catch {
-    return fallback
-  }
-}
+const centiLabel = (centi: number) => centiEthToEth(centi, ',')
 
 type FacetListProps = {
   title: string
@@ -78,19 +65,20 @@ function PriceRange({
 }) {
   const headingId = useId()
   const labelId = useId()
-  const min = toCenti(BigInt(range.minWei))
+  // O slider trabalha em centésimos de ETH (inteiros seguros); a URL guarda ETH em string
+  const min = weiToCentiEth(weiFromString(range.minWei))
   // Arredonda o teto para cima para que o NFT mais caro continue dentro da faixa
-  const max = Number((BigInt(range.maxWei) + CENTI_WEI - 1n) / CENTI_WEI)
+  const max = weiToCentiEth(weiFromString(range.maxWei), 'ceil')
   const [value, setValue] = useState<[number, number]>([
-    safeCenti(search.minPrice, min),
-    safeCenti(search.maxPrice, max),
+    ethToCentiEth(search.minPrice, min),
+    ethToCentiEth(search.maxPrice, max),
   ])
 
   function apply() {
     const [lo, hi] = value
     navigate({
-      minPrice: lo > min ? centiToEth(lo) : undefined,
-      maxPrice: hi < max ? centiToEth(hi) : undefined,
+      minPrice: lo > min ? centiEthToEth(lo) : undefined,
+      maxPrice: hi < max ? centiEthToEth(hi) : undefined,
     })
     onApplied?.()
   }

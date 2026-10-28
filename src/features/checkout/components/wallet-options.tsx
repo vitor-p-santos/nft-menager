@@ -1,12 +1,14 @@
 import { EllipsisVerticalIcon } from 'lucide-react'
 import { useId, useState } from 'react'
 import walletCoinbase from '@/assets/icons/wallet-coinbase.png'
+import { LiveMessage, type LiveFeedback } from '@/components/feedback/live-message'
 import { Badge } from '@/components/ui/badge'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { RadioGroup, RadioGroupItem, RadioIndicator } from '@/components/ui/radio-group'
 import { NETWORK_LABELS, type Network } from '@/entities/nft'
 import { shortAddress, WALLET_PROVIDER_LABELS, type Wallet, type WalletProvider } from '@/entities/wallet'
+import { toApiError } from '@/lib/api'
 import { cn } from '@/lib/utils'
 
 /**
@@ -31,8 +33,8 @@ type SavedWalletsProps = {
   onSelect: (wallet: Wallet) => void
   onSwitch: () => void
   actions?: WalletMenuActions
-  /** Antes de remover: o formulário troca a seleção se a carteira removida era a escolhida. */
-  onBeforeRemove?: (wallet: Wallet) => void
+  /** Depois que a API confirma a remoção: o formulário troca a seleção se a carteira removida era a escolhida. */
+  onRemoved?: (wallet: Wallet) => void
 }
 
 /** Menu ⋮ do cartão (sem frame no Figma: segue o menu da conta): definir como principal e remover. */
@@ -64,7 +66,7 @@ function WalletMenu({
             void actions
               .setPrimary(wallet.id)
               .then(() => onFeedback(`${wallet.label} agora é a carteira principal.`))
-              .catch(() => onFeedback('Não foi possível definir a carteira principal. Tente novamente.', true))
+              .catch((error: unknown) => onFeedback(`Não foi possível definir a carteira principal. ${toApiError(error).message}`, true))
           }
           className="cursor-pointer text-body text-foreground"
         >
@@ -83,21 +85,24 @@ function WalletMenu({
  * em Surface Card, com radio, apelido, ENS (ou endereço curto) e rede. "Trocar carteira" abre o
  * formulário do colecionador para informar outra carteira.
  */
-export function SavedWallets({ wallets, selectedId, onSelect, onSwitch, actions, onBeforeRemove }: SavedWalletsProps) {
+export function SavedWallets({ wallets, selectedId, onSelect, onSwitch, actions, onRemoved }: SavedWalletsProps) {
   const titleId = useId()
   const [toRemove, setToRemove] = useState<Wallet | null>(null)
-  const [feedback, setFeedback] = useState<{ message: string; error: boolean } | null>(null)
-  const announce = (message: string, error = false) => setFeedback({ message, error })
+  const [feedback, setFeedback] = useState<LiveFeedback>(null)
+  const announce = (message: string, error = false) => setFeedback({ tone: error ? 'error' : 'status', message })
 
   function confirmRemove() {
     const wallet = toRemove
     if (!wallet || !actions) return
     setToRemove(null)
-    onBeforeRemove?.(wallet)
+    // A seleção só muda quando a remoção dá certo: se falhar, o formulário segue na mesma carteira
     void actions
       .remove(wallet.id)
-      .then(() => announce(`Carteira ${wallet.label} removida.`))
-      .catch(() => announce('Não foi possível remover a carteira. Tente novamente.', true))
+      .then(() => {
+        onRemoved?.(wallet)
+        announce(`Carteira ${wallet.label} removida.`)
+      })
+      .catch((error: unknown) => announce(`Não foi possível remover a carteira. ${toApiError(error).message}`, true))
   }
   return (
     <section aria-labelledby={titleId} className="flex flex-col gap-5">
@@ -149,9 +154,7 @@ export function SavedWallets({ wallets, selectedId, onSelect, onSwitch, actions,
           })}
         </RadioGroup>
       )}
-      <output aria-live="polite" className={cn('text-body leading-5 empty:hidden', feedback?.error ? 'text-destructive' : 'text-text-secondary')}>
-        {feedback?.message}
-      </output>
+      <LiveMessage as="output" feedback={feedback} className="text-body leading-5 empty:hidden" />
       <ConfirmDialog
         open={toRemove !== null}
         onOpenChange={(open) => !open && setToRemove(null)}

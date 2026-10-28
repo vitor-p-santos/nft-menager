@@ -4,3 +4,8 @@ export function formatReceiptDate(iso: string): string {
   const month = new Intl.DateTimeFormat('pt-BR', { month: 'short' }).format(date).replace('.', '')
   return `${date.getDate()} ${month.charAt(0).toUpperCase()}${month.slice(1)}, ${date.getFullYear()}`
 }
+
+/** Total de edições do pedido (soma das quantidades dos itens). */
+export function orderEditionsCount(order: { items: ReadonlyArray<{ quantity: number }> }): number {
+  return order.items.reduce((sum, item) => sum + item.quantity, 0)
+}

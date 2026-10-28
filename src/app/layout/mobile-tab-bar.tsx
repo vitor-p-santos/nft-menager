@@ -53,7 +53,7 @@ export function MobileTabBar() {
         to="/"
         aria-label="Início"
         activeOptions={{ exact: true, includeHash: false }}
-        className="absolute top-[71px] left-[11.1%] flex size-10 -translate-x-1/2 -translate-y-2.5 items-center justify-center"
+        className={`${TAB_CLASS} left-[11.1%]`}
       >
         <img src={tabHome} alt="" width={16} height={17} />
       </Link>
@@ -77,7 +77,7 @@ export function MobileTabBar() {
       <Link
         to="/carrinho"
         aria-label="Carrinho"
-        className="absolute top-[71px] left-[72.9%] flex size-10 -translate-x-1/2 -translate-y-2.5 items-center justify-center"
+        className={`${TAB_CLASS} left-[72.9%]`}
       >
         <img src={tabCart} alt="" width={20} height={20} />
       </Link>

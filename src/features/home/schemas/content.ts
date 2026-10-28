@@ -53,8 +53,20 @@ export type NewsletterInput = z.infer<typeof newsletterSchema>
 
 export const SOCIAL_NETWORKS = ['facebook', 'instagram', 'twitter', 'linkedin', 'youtube'] as const
 
-/** Configurações globais do site (contato e redes sociais), usadas pelo footer. */
+/**
+ * Configurações globais do site usadas pelo footer: destaques do topo, contato, redes sociais e a
+ * coluna "Coleções" (atalhos para o catálogo filtrado por categoria).
+ */
 export const siteSettingsSchema = z.object({
+  features: z.array(
+    z.object({
+      id: z.string().min(1),
+      /** Letra do círculo âmbar de 74px. */
+      letter: z.string().length(1),
+      title: z.string(),
+      text: z.string(),
+    }),
+  ),
   contact: z.object({
     email: z.email(),
     phone: z.string(),
@@ -68,5 +80,6 @@ export const siteSettingsSchema = z.object({
       url: z.url(),
     }),
   ),
+  collections: z.array(z.object({ label: z.string(), categoryId: z.string().min(1) })),
 })
 export type SiteSettings = z.infer<typeof siteSettingsSchema>
