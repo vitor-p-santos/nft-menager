@@ -6,8 +6,9 @@ import { nftsTable } from '../db/catalog'
 import { loadTable, saveTable } from '../db/storage'
 import { HOME_CONTENT, SITE_SETTINGS } from '../fixtures/content'
 import { PAGES } from '../fixtures/pages'
+import { toSummary } from '../domain/catalog'
+import { apiError, notFound, readJson } from '../http'
 import { withScenario } from '../scenarios'
-import { toSummary } from './catalog'
 
 export const contentHandlers = [
   http.get(
@@ -15,7 +16,7 @@ export const contentHandlers = [
     withScenario('content.home', () => {
       const { featuredSlug, ...content } = HOME_CONTENT
       const nft = nftsTable.find(featuredSlug)
-      if (!nft) return HttpResponse.json({ code: 'not_found', message: 'Destaque indisponível' }, { status: 404 })
+      if (!nft) return notFound('Destaque indisponível')
       return HttpResponse.json({
         ...content,
         featured: { title: 'NFT EM DESTAQUE', subtitle: 'OFERTA LIMITADA', nft: toSummary(nft) },
@@ -32,7 +33,7 @@ export const contentHandlers = [
     `${API_BASE_URL}/content/pages/:slug`,
     withScenario('content.page', ({ params }) => {
       const slug = pageSlugSchema.safeParse(params.slug)
-      if (!slug.success) return HttpResponse.json({ code: 'not_found', message: 'Página não encontrada' }, { status: 404 })
+      if (!slug.success) return notFound('Página não encontrada')
       return HttpResponse.json(PAGES[slug.data])
     }),
   ),
@@ -40,12 +41,9 @@ export const contentHandlers = [
   http.post(
     `${API_BASE_URL}/newsletter`,
     withScenario('content.newsletter', async ({ request }) => {
-      const parsed = newsletterSchema.safeParse(await request.json())
+      const parsed = newsletterSchema.safeParse(await readJson(request))
       if (!parsed.success) {
-        return HttpResponse.json(
-          { code: 'validation_error', message: 'E-mail inválido', details: { email: 'Digite um e-mail válido' } },
-          { status: 422 },
-        )
+        return apiError(422, 'validation_error', 'E-mail inválido', { email: 'Digite um e-mail válido' })
       }
       const subscribers = loadTable<string[]>('newsletter', () => [])
       const email = parsed.data.email.toLowerCase()

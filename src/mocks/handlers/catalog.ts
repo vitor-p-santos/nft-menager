@@ -42,9 +42,6 @@ function parseEthParam(value: string | null): bigint | undefined {
   }
 }
 
-/** Reexportado para `handlers/content.ts`, que ainda importa daqui. */
-export { toSummary }
-
 /** Aplica os filtros; `skip` ignora uma dimensão (facets contam com os demais filtros aplicados). */
 function matches(nft: Nft, f: Filters, skip?: 'categories' | 'networks' | 'creator', now = Date.now()) {
   if (f.q) {
