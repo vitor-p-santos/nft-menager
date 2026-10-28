@@ -1,21 +1,26 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { CircleAlertIcon, LoaderCircleIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
-import thankYou from '@/assets/decor/thank-you.png'
 import { Skeleton } from '@/components/feedback/skeleton'
 import { EmptyState, ErrorState } from '@/components/feedback/states'
 import { Container } from '@/components/layout/container'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { NETWORK_LABELS } from '@/entities/nft'
-import type { Order } from '@/entities/order'
-import { formatReceiptDate } from '@/entities/order/format'
+import { rejectionTitle, type Order } from '@/entities/order'
+import { formatReceiptDate, orderEditionsCount } from '@/entities/order/format'
 import { OrderReceipt } from '@/entities/order/order-receipt'
+import {
+  MyOrdersLink,
+  ORDER_STATUS_TITLE_CLASS,
+  OrderStatusMessage,
+  RejectedOrderActions,
+  ThankYouArt,
+} from '@/entities/order/order-status-panel'
 import { ApiError } from '@/lib/api'
 import { formatEthLabel } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { orderReceiptQuery, useOrderDetail } from '../api'
-import { ORDER_STATUS_LABELS, REJECTION_TITLES } from './order-labels'
+import { ORDER_STATUS_LABELS } from './order-labels'
 import { OrdersHeading } from './orders-heading'
 
 /**
@@ -36,15 +41,7 @@ function ReceiptCard({ children, busy, labelled = true }: { children: ReactNode;
 
 const TITLE_ID = 'pedido-titulo'
 
-const titleClass = 'px-6 text-center text-body-lg leading-5 font-bold text-text-secondary'
-
-function MyOrdersLink({ className }: { className?: string }) {
-  return (
-    <Link to="/atividade" className={cn(buttonVariants({ variant: 'link', size: 'none' }), 'rounded-sm text-body-md', className)}>
-      Ver meus pedidos
-    </Link>
-  )
-}
+const titleClass = cn('px-6 text-center', ORDER_STATUS_TITLE_CLASS)
 
 /** Recibo imutável (`GET /orders/:id/receipt`): o snapshot gravado na confirmação, nunca o pedido vivo. */
 function ConfirmedOrder({ orderId }: { orderId: string }) {
@@ -52,7 +49,7 @@ function ConfirmedOrder({ orderId }: { orderId: string }) {
 
   return (
     <ReceiptCard busy={receipt.isPending}>
-      <img src={thankYou} alt="" width={68} height={84} className="mx-auto" />
+      <ThankYouArt />
       <h2 id={TITLE_ID} className={cn(titleClass, 'mt-[18px] mb-[22px]')}>
         Seus NFTs agora estão na sua carteira
       </h2>
@@ -73,12 +70,11 @@ function ConfirmedOrder({ orderId }: { orderId: string }) {
   )
 }
 
-/** Pendente (D-03): o layout do recibo com o ícone de progresso; o polling de `orderQueries.detail` atualiza. */
+/** Pendente (D-03): o layout do recibo com o ícone de progresso; o `order.updated` (ou o polling) atualiza. */
 function PendingOrder({ order }: { order: Order }) {
   return (
     <ReceiptCard busy>
-      <div className="flex flex-col items-center gap-5 px-6 pt-6 pb-2 text-center md:px-14">
-        <LoaderCircleIcon aria-hidden className="size-16 text-primary motion-safe:animate-spin" />
+      <OrderStatusMessage status="pending" className="pb-2">
         <h2 id={TITLE_ID} className={titleClass}>
           Aguardando a confirmação da rede
         </h2>
@@ -88,43 +84,40 @@ function PendingOrder({ order }: { order: Order }) {
         </p>
         <OrderFacts order={order} />
         <MyOrdersLink />
-      </div>
+      </OrderStatusMessage>
     </ReceiptCard>
   )
 }
 
 /** Recusado (D-03): mesmo layout, ícone de alerta e o motivo devolvido pela API. */
 function RejectedOrder({ order }: { order: Order }) {
-  const title = order.rejectionCode ? REJECTION_TITLES[order.rejectionCode] : 'Pedido recusado'
   return (
     <ReceiptCard>
-      <div className="flex flex-col items-center gap-5 px-6 pt-6 pb-2 text-center md:px-14">
-        <CircleAlertIcon aria-hidden className="size-16 text-destructive" />
+      <OrderStatusMessage status="rejected" className="pb-2">
         <h2 id={TITLE_ID} className={titleClass}>
-          {title}
+          {rejectionTitle(order)}
         </h2>
         <p className="text-body leading-[22px] text-text-secondary">
           {order.rejectionReason ?? 'A compra não foi concluída.'} Nenhum valor foi cobrado.
         </p>
         <OrderFacts order={order} />
         {/* Mesmas ações do aviso de recusa do checkout: o carrinho continua intacto e o checkout revalida tudo */}
-        <div className="mt-3 flex w-full flex-col items-center gap-3">
-          <Link to="/checkout" className={buttonVariants({ size: 'lg' })}>
-            Tentar novamente
-          </Link>
-          <Link to="/carrinho" className={cn(buttonVariants({ variant: 'link', size: 'none' }), 'rounded-sm text-body-md')}>
-            Voltar ao carrinho
-          </Link>
+        <RejectedOrderActions
+          retry={
+            <Link to="/checkout" className={buttonVariants({ size: 'lg' })}>
+              Tentar novamente
+            </Link>
+          }
+        >
           <MyOrdersLink />
-        </div>
-      </div>
+        </RejectedOrderActions>
+      </OrderStatusMessage>
     </ReceiptCard>
   )
 }
 
 /** Resumo do pedido não confirmado (sem recibo): data, itens e total, entre as linhas âmbar do recibo. */
 function OrderFacts({ order }: { order: Order }) {
-  const quantity = order.items.reduce((sum, item) => sum + item.quantity, 0)
   return (
     <dl className="-mx-6 grid w-[calc(100%+3rem)] grid-cols-3 border-y border-primary px-6 py-4 text-left text-body leading-[19px] text-text-secondary md:-mx-14 md:w-[calc(100%+7rem)] md:px-9">
       <div className="flex flex-col gap-0.5">
@@ -133,7 +126,7 @@ function OrderFacts({ order }: { order: Order }) {
       </div>
       <div className="flex flex-col gap-0.5 border-l border-primary pl-4">
         <dt className="font-bold">Edições</dt>
-        <dd>{quantity}</dd>
+        <dd>{orderEditionsCount(order)}</dd>
       </div>
       <div className="flex flex-col gap-0.5 border-l border-primary pl-4">
         <dt className="font-bold">Total</dt>
@@ -183,8 +176,8 @@ function OrderSkeleton() {
 
 /**
  * Página do pedido (`/pedidos/$orderId`, T-081). Confirmado: recibo imutável; pendente: aguarda a
- * rede com polling a cada 2 s (`useOrderDetail`, que invalida as listas ao sair de `pending`), até o
- * socket da Fase 8; recusado: motivo, "Tentar novamente" (checkout) e volta ao carrinho, que continua
+ * rede pelo evento `order.updated`, com polling de reserva (`useOrderDetail`, que invalida as listas
+ * ao sair de `pending`); recusado: motivo, "Tentar novamente" (checkout) e volta ao carrinho, que continua
  * intacto. A troca de estado é anunciada num `aria-live`.
  */
 export function OrderPage({ orderId }: { orderId: string }) {
