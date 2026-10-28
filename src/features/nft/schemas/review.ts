@@ -19,4 +19,3 @@ export const reviewsPageSchema = z.object({
   pageSize: z.number().int().positive(),
   total: z.number().int().nonnegative(),
 })
-export type ReviewsPage = z.infer<typeof reviewsPageSchema>
