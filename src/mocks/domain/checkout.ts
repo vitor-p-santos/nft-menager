@@ -1,3 +1,5 @@
+import { cartNetworks, networkMismatchMessage } from '@/entities/cart'
+import type { Network } from '@/entities/nft'
 import type { WalletSnapshot } from '@/entities/order'
 import type { CreateOrderPayload, Quote, QuoteChange } from '@/features/checkout/schemas/checkout'
 import { stableStringify } from '@/lib/hash'
@@ -80,15 +82,21 @@ function revalidateCart(owner: CartOwner, clientVersion: number) {
 
 /**
  * Revalida preço, disponibilidade, cupom e taxa do carrinho do usuário e grava a cotação (com o diff
- * em `changes`). Sem nenhum item comprável a cotação não é criada (`cart_empty`).
+ * em `changes`). Sem nenhum item comprável a cotação não é criada (`cart_empty`); com NFTs de redes
+ * diferentes também não (`mixed_networks`): cada pedido é pago numa rede só.
  */
 export function createQuote(
   userId: string,
   cartVersion: number,
-): { ok: true; quote: Quote } | { ok: false; reason: 'cart_empty'; changes: QuoteChange[] } {
+):
+  | { ok: true; quote: Quote }
+  | { ok: false; reason: 'cart_empty'; changes: QuoteChange[] }
+  | { ok: false; reason: 'mixed_networks'; networks: Network[]; changes: QuoteChange[] } {
   const { stored, cart, changes } = revalidateCart({ userId }, cartVersion)
   const items = cart.items.filter((i) => i.quantity > 0)
   if (items.length === 0) return { ok: false, reason: 'cart_empty', changes }
+  const networks = cartNetworks(items)
+  if (networks.length > 1) return { ok: false, reason: 'mixed_networks', networks, changes }
   const quote = {
     id: `quote_${crypto.randomUUID()}`,
     cartVersion: cart.version,
@@ -140,6 +148,12 @@ export function quoteProblem(quote: QuoteRow | undefined, userId: string): 'inva
 }
 
 type FieldIssue = { path: string[]; message: string }
+
+/** A carteira tem de ser da rede dos NFTs da cotação (a cotação já garante uma rede só). */
+export function orderNetworkIssue(quote: QuoteRow, payload: CreateOrderPayload): FieldIssue | null {
+  const network = quote.items[0]?.nft.network
+  return network && payload.network !== network ? { path: ['network'], message: networkMismatchMessage(network) } : null
+}
 
 /**
  * Carteira do pedido: a salva (`walletId`, conferindo rede e endereço) ou a informada no formulário.

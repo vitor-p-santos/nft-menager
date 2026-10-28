@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { appliedCouponSchema, cartItemSchema, totalsSchema } from '@/entities/cart'
-import { editionSchema, networkSchema, weiSchema } from '@/entities/nft'
+import { appliedCouponSchema, cartItemSchema, networkMismatchMessage, totalsSchema } from '@/entities/cart'
+import { editionSchema, networkSchema, weiSchema, type Network } from '@/entities/nft'
 import type { User } from '@/entities/session'
 import { isWalletAddress, walletProviderSchema, type Wallet } from '@/entities/wallet'
 
@@ -62,6 +62,18 @@ export const collectorSchema = z
       ctx.addIssue({ code: 'custom', path: ['secondaryWallet'], message: 'Informe um nome ENS ou um endereço válido' })
     }
   })
+
+/**
+ * O colecionador de um pedido cujos NFTs são da rede `network`: a carteira (salva ou digitada) tem de
+ * ser dessa rede. A API recusa a divergência com 422 no campo `network`.
+ */
+export const collectorSchemaFor = (network: Network) =>
+  collectorSchema.superRefine((value, ctx) => {
+    if (value.network && value.network !== network) {
+      ctx.addIssue({ code: 'custom', path: ['network'], message: networkMismatchMessage(network) })
+    }
+  })
+
 /** Tipo do formulário (entrada do resolver). */
 export type CollectorFormValues = z.input<typeof collectorSchema>
 /** Payload normalizado (saída do schema) enviado em `POST /orders`. */

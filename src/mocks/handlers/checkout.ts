@@ -1,4 +1,5 @@
 import { http, HttpResponse } from 'msw'
+import { mixedNetworksMessage } from '@/entities/cart'
 import { isTerminalStatus, ORDER_STATUSES, ORDERS_PAGE_SIZE, orderStatusSchema, type OrderStatus } from '@/entities/order'
 import { createOrderInputSchema, quoteRequestSchema } from '@/features/checkout/schemas/checkout'
 import { API_BASE_URL } from '@/lib/api'
@@ -7,6 +8,7 @@ import { quotesTable, receiptsTable, toPublicOrder } from '../db/orders'
 import {
   createQuote,
   findQuoteConflict,
+  orderNetworkIssue,
   quoteProblem,
   resolveOrderWallet,
   simulateConcurrentPriceChange,
@@ -44,6 +46,10 @@ export const checkoutHandlers = [
         if (!parsed.success) return validationError(parsed.error.issues)
         if (getScenario('checkout.quote') === 'conflict') simulateConcurrentPriceChangeForCart('checkout.quote', user.id)
         const result = createQuote(user.id, parsed.data.cartVersion)
+        if (!result.ok && result.reason === 'mixed_networks') {
+          const { networks, changes } = result
+          return apiError(422, 'mixed_networks', mixedNetworksMessage(networks), { networks, changes })
+        }
         if (!result.ok) {
           return apiError(422, 'cart_empty', 'Seu carrinho está vazio ou os itens esgotaram', { changes: result.changes })
         }
@@ -85,6 +91,9 @@ export const checkoutHandlers = [
         const problem = quoteProblem(quote, userId)
         if (problem === 'invalid' || !quote) return validationError([{ path: ['quoteId'], message: 'Cotação inválida' }])
         if (problem) return apiError(409, 'quote_expired', QUOTE_PROBLEMS[problem])
+
+        const networkIssue = orderNetworkIssue(quote, payload)
+        if (networkIssue) return validationError([networkIssue])
 
         const resolved = resolveOrderWallet(userId, payload)
         if ('issue' in resolved) return validationError([resolved.issue])

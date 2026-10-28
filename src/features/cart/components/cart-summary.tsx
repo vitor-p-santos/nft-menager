@@ -4,6 +4,7 @@ import { useId } from 'react'
 import { useForm } from 'react-hook-form'
 import { Skeleton } from '@/components/feedback/skeleton'
 import { buttonVariants } from '@/components/ui/button-variants'
+import { cartNetworks, mixedNetworksMessage } from '@/entities/cart'
 import { CATALOG_SECTION_ID } from '@/entities/catalog'
 import { useCurrentUser } from '@/entities/session'
 import { ApiError } from '@/lib/api'
@@ -134,7 +135,13 @@ function Row({ label, value, className }: { label: string; value: string; classN
  */
 export function CartSummary({ cart }: { cart: Cart }) {
   const { totals } = cart
-  const hasUnavailable = cart.items.some((i) => i.issue === 'unavailable')
+  const networks = cartNetworks(cart.items)
+  // Itens indisponíveis ou NFTs de redes diferentes (cada compra usa uma rede só) impedem finalizar
+  const blockedReason = cart.items.some((i) => i.issue === 'unavailable')
+    ? 'Remova os itens indisponíveis para finalizar.'
+    : networks.length > 1
+      ? mixedNetworksMessage(networks)
+      : null
   // Quem já entrou não precisa "conectar": o rótulo do Figma fica só para o visitante
   const checkoutLabel = useCurrentUser() ? 'Finalizar' : 'Conectar e finalizar'
 
@@ -176,7 +183,7 @@ export function CartSummary({ cart }: { cart: Cart }) {
 
       <div className="flex flex-col items-center gap-3">
         {/* Checkout é rota privada: sem sessão, `requireAuth` leva ao login e volta para cá depois */}
-        {hasUnavailable ? (
+        {blockedReason ? (
           <button
             type="button"
             aria-disabled
@@ -190,9 +197,9 @@ export function CartSummary({ cart }: { cart: Cart }) {
             {checkoutLabel}
           </Link>
         )}
-        {hasUnavailable && (
+        {blockedReason && (
           <p id="resumo-aviso" className="text-center text-caption leading-4 text-destructive">
-            Remova os itens indisponíveis para finalizar.
+            {blockedReason}
           </p>
         )}
         <Link
