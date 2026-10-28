@@ -21,15 +21,16 @@ const tabClass =
  * Modal de autenticação desktop (Figma Sign In Modal `70381:239`, 500×600, e Sign Up Modal
  * `70383:239`, 500×656): card Surface Card sem raio, faixa âmbar de 10px na base, conteúdo de
  * 340px centralizado e abas "Entrar | Criar conta". "Esqueceu a senha?" troca o conteúdo (D-07).
- * Fecha ao entrar; a ação pendente (ex.: favoritar) leva de volta à rota de origem.
+ * Fecha ao entrar; a ação pendente (ex.: favoritar) leva de volta à rota de origem, e o `redirect`
+ * (vindo de `/entrar?redirect=` no desktop) segue o fluxo interrompido.
  */
 export function AuthDialog() {
-  const { open, view, notice } = useAuthDialog()
+  const { open, view, notice, redirect } = useAuthDialog()
   const completeAuth = useAuthSuccess()
 
   function handleSuccess() {
     authDialog.close()
-    completeAuth(undefined, null)
+    completeAuth(redirect ?? undefined, null)
   }
 
   return (

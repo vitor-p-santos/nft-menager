@@ -178,3 +178,42 @@ test('troca de conta: carrinho anônimo mesclado e dados privados isolados', asy
   await expect(cartLink).toHaveAccessibleName('Carrinho, 1 item')
   await expect(favorite).toHaveAttribute('aria-pressed', 'true')
 })
+
+test('a partir de md, /entrar e /cadastro viram o modal sobre o mercado e seguem o redirect', async ({ page }, testInfo) => {
+  test.skip(isMobile(testInfo), 'No mobile são páginas (coberto pelos testes acima)')
+  test.slow()
+  // Acesso direto ao /cadastro: modal "Criar conta" sobre o mercado, sem a página por trás
+  await page.goto('/cadastro')
+  await expect(page.getByRole('dialog', { name: 'Criar conta na Kurio' })).toBeVisible({ timeout: 15_000 })
+  await expect(page).toHaveURL((url) => url.pathname === '/')
+  await page.keyboard.press('Escape')
+
+  // /entrar com redirect: o login pelo modal volta à rota pedida
+  await page.goto(`/entrar?redirect=${encodeURIComponent('/perfil')}`)
+  const dialog = page.getByRole('dialog', { name: 'Entrar na Kurio' })
+  await expect(dialog).toBeVisible({ timeout: 15_000 })
+  // Por trás do modal (aria-hidden enquanto ele está aberto) está o mercado, não a página de login
+  await expect(page.getByRole('region', { name: 'Catálogo de NFTs', includeHidden: true })).toBeAttached({ timeout: 15_000 })
+  await expect(page.getByRole('heading', { level: 1, name: 'Entrar' })).toHaveCount(0)
+  await submitLogin(dialog, ANA)
+  await expect(page).toHaveURL((url) => url.pathname === '/perfil', { timeout: 15_000 })
+  await expect(accountMenu(page, ANA)).toBeVisible()
+})
+
+test('janela que cresce de mobile para desktop em /entrar troca a página pelo modal', async ({ page }, testInfo) => {
+  test.skip(!isMobile(testInfo), 'Começa no mobile (390) e cresce para 1440')
+  test.slow()
+  // "Conta" da tab bar no mobile → página /entrar?redirect=/
+  await page.goto('/')
+  await page.getByRole('link', { name: 'Entrar na conta' }).click({ timeout: 15_000 })
+  await expect(page.getByRole('heading', { level: 1, name: 'Entrar' })).toBeVisible({ timeout: 15_000 })
+
+  await page.setViewportSize({ width: 1440, height: 900 })
+  const dialog = page.getByRole('dialog', { name: 'Entrar na Kurio' })
+  await expect(dialog).toBeVisible({ timeout: 15_000 })
+  await expect(page).toHaveURL((url) => url.pathname === '/')
+  await expect(page.getByRole('heading', { level: 1, name: 'Entrar' })).toHaveCount(0)
+  await submitLogin(dialog, ANA)
+  await expect(accountMenu(page, ANA)).toBeVisible({ timeout: 15_000 })
+  await expect(dialog).toHaveCount(0)
+})

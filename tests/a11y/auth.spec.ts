@@ -3,8 +3,8 @@ import type { Page } from '@playwright/test'
 import { expect, test } from '../fixtures/app'
 
 /*
- * Fase 4: /entrar e /cadastro (páginas no mobile, card em md+) e o modal "Entrar | Criar conta"
- * do header (md+), já com os erros de validação visíveis. Sem violações sérias/críticas.
+ * Fase 4: /entrar e /cadastro (páginas, só abaixo de md; a partir dele viram o modal) e o modal
+ * "Entrar | Criar conta" do header (md+), já com os erros de validação visíveis. Sem violações sérias/críticas.
  */
 async function seriousViolations(page: Page, label: string) {
   // No meio de uma transição de cor (ex.: troca de aba do modal) o axe mede a cor intermediária e acusa
@@ -21,13 +21,16 @@ async function seriousViolations(page: Page, label: string) {
   return violations.filter((v) => v.impact === 'serious' || v.impact === 'critical').map((v) => `${label}: ${v.id}`)
 }
 
+const AUTH_PAGES = [
+  { path: '/entrar', heading: 'Entrar', submit: 'Entrar' },
+  { path: '/cadastro', heading: 'Criar perfil de colecionador', submit: 'Criar perfil' },
+]
+
 test('login e cadastro sem violações sérias/críticas', async ({ page }, testInfo) => {
   test.slow() // 3 a 4 auditorias axe + navegações: passa de 30s no WSL
   const found: string[] = []
-  for (const { path, heading, submit } of [
-    { path: '/entrar', heading: 'Entrar', submit: 'Entrar' },
-    { path: '/cadastro', heading: 'Criar perfil de colecionador', submit: 'Criar perfil' },
-  ]) {
+  const pages = testInfo.project.name === 'mobile-390' ? AUTH_PAGES : []
+  for (const { path, heading, submit } of pages) {
     await page.goto(path)
     await expect(page.getByRole('heading', { level: 1, name: heading })).toBeVisible({ timeout: 15_000 })
     await page.getByRole('main').getByRole('button', { name: submit, exact: true }).click()
