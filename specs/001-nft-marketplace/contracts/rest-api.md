@@ -40,7 +40,7 @@ Regras de auth:
 | GET | `/nfts/:id/related` | `Nft[]` | `catalog.related` |
 | GET | `/nfts/:id/reviews?page&pageSize` | `{items:Review[],page,pageSize,total}`, `Review = {id,nftId,author,rating:1–5 inteiro,body,createdAt:ISO datetime}`, da mais recente para a mais antiga; `pageSize` padrão 5 (máx. 50); `total` = `reviewsCount` do NFT e a média ≈ `rating`; NFT inexistente → 404 `not_found` | `catalog.reviews` |
 | GET | `/content/home` | `{hero[],featured:Nft,promos[],posts[]}` | `content.home` |
-| GET | `/content/site` | `{contact:{email,phone,phoneHref},socials:[{id:facebook\|instagram\|twitter\|linkedin\|youtube,label,url}]}` (D-10) | `content.site` |
+| GET | `/content/site` | `{features:[{id,letter,title,text}],contact:{email,phone,phoneHref},socials:[{id:facebook\|instagram\|twitter\|linkedin\|youtube,label,url}],collections:[{label,categoryId}]}` (D-10; destaques e coluna "Coleções" do footer) | `content.site` |
 | GET | `/content/pages/:slug` | `{slug,title,summary,updatedAt:ISO date,sections:[{heading,paragraphs[]}]}`; slugs `central-de-ajuda`, `como-comprar`, `carteira-e-seguranca`, `politica-do-mercado`, `denunciar-item`, `estudio-do-criador`; outro slug → 404 `not_found` (D-10) | `content.page` |
 | POST | `/newsletter` | `{email}` → 202 | `content.newsletter` |
 

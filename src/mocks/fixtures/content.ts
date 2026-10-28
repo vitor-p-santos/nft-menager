@@ -114,8 +114,13 @@ export const HOME_CONTENT: Omit<HomeContent, 'featured'> & { featuredSlug: strin
   ],
 }
 
-/** Contato e redes sociais exibidos no footer (D-10). */
+/** Destaques, contato, redes sociais e coleções exibidos no footer (D-10). */
 export const SITE_SETTINGS: SiteSettings = {
+  features: [
+    { id: 'seguranca', letter: 'W', title: 'Segurança da carteira', text: 'Proteja sua carteira e colecione arte digital verificada com confiança.' },
+    { id: 'criadores', letter: 'C', title: 'Criadores em destaque', text: 'Conheça artistas, estúdios e comunidades que moldam a cultura digital na rede.' },
+    { id: 'lancamentos', letter: 'D', title: 'Alertas de lançamentos', text: 'Receba calendários de cunhagem, novidades de listas de acesso e análises do mercado.' },
+  ],
   contact: { email: 'contato@email.com', phone: '+55 11 4002 8922', phoneHref: 'tel:+551140028922' },
   socials: [
     { id: 'facebook', label: 'Facebook', url: 'https://www.facebook.com/kurio' },
@@ -123,5 +128,12 @@ export const SITE_SETTINGS: SiteSettings = {
     { id: 'twitter', label: 'Twitter', url: 'https://x.com/kurio' },
     { id: 'linkedin', label: 'LinkedIn', url: 'https://www.linkedin.com/company/kurio' },
     { id: 'youtube', label: 'YouTube', url: 'https://www.youtube.com/@kurio' },
+  ],
+  collections: [
+    { label: 'Arte digital', categoryId: 'arte-digital' },
+    { label: 'Fotografia', categoryId: 'fotografia' },
+    { label: 'Música', categoryId: 'musica' },
+    { label: 'Arte 3D', categoryId: 'arte-3d' },
+    { label: 'Utilidade', categoryId: 'utilidade' },
   ],
 }
